@@ -47,7 +47,9 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := r.MultipartForm.File["files"]
+	var images []string
 	for _, file := range files {
+		images = append(images, file.Filename)
 		f, err := file.Open()
 		if err != nil {
 			log.Fatal(err)
@@ -73,6 +75,11 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(int(400))
 			return
 		}
+	}
+
+	err = archive(images)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	w.WriteHeader(200)
@@ -126,7 +133,17 @@ func grayFilter(myimage image.Image, imageName string, ext string) {
 	grayImage := effect.Grayscale(myimage)
 	filename, ext := extractFileMeta(imageName)
 	image := fmt.Sprintf("Gray_%s.%s", filename, ext)
-	file, err := os.Create(path.Join("files", image))
+
+	// Check if directory does not exist
+	if _, err := os.Stat("files/cat"); os.IsNotExist(err) {
+		fmt.Println(os.IsNotExist(err))
+		// Create directory
+		if err := os.Mkdir("cat", os.ModePerm); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	file, err := os.Create(path.Join("files", "cat", image))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -134,11 +151,6 @@ func grayFilter(myimage image.Image, imageName string, ext string) {
 	defer file.Close()
 
 	err = jpeg.Encode(file, grayImage, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = archive(image)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -151,13 +163,19 @@ func extractFileMeta(fileName string) (string, string) {
 	return name, ext
 }
 
-func archive(imageName string) error {
-	archive, err := archiver.FilesFromDisk(nil, map[string]string{strings.Join([]string{"files/", imageName}, ""): imageName})
+func archive(imageNames []string) error {
+	images := make(map[string]string)
+	for i := 0; i < len(imageNames); i++ {
+		key := "files/cat/Gray_" + imageNames[i]
+		images[key] = ""
+	}
+	fmt.Println(images)
+	archive, err := archiver.FilesFromDisk(nil, images)
 	if err != nil {
 		return err
 	}
 
-	out, err := os.Create(strings.Join([]string{imageName, ".zip"}, ""))
+	out, err := os.Create(strings.Join([]string{"Gray", ".zip"}, ""))
 	if err != nil {
 		return err
 	}
