@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"image"
@@ -18,6 +19,7 @@ import (
 	"github.com/anthonynsimon/bild/imgio"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/mholt/archiver/v4"
 )
 
 func greet(w http.ResponseWriter, r *http.Request) {
@@ -121,25 +123,6 @@ func validImageType(imgType string) bool {
 }
 
 func grayFilter(myimage image.Image, imageName string, ext string) {
-	// size := myimage.Bounds().Size()
-	// rect := image.Rect(0, 0, size.X, size.Y)
-	// wImg := image.NewRGBA(rect)
-
-	// for i := 0; i < width; i++ {
-	// 	for j := 0; j < height; j++ {
-	// 		pix := myimage.At(i, j)
-	// 		orgColor := color.RGBAModel.Convert(pix).(color.RGBA)
-	// 		r := float64(orgColor.R) * 0.92126
-	// 		g := float64(orgColor.G) * 0.97152
-	// 		b := float64(orgColor.B) * 0.90722
-
-	// 		grey := uint8((r + g + b) / 3)
-	// 		c := color.RGBA{
-	// 			R: grey, G: grey, B: grey, A: orgColor.A,
-	// 		}
-	// 		wImg.Set(i, j, c)
-	// 	}
-	// }
 	grayImage := effect.Grayscale(myimage)
 	filename, ext := extractFileMeta(imageName)
 	image := fmt.Sprintf("Gray_%s.%s", filename, ext)
@@ -147,8 +130,18 @@ func grayFilter(myimage image.Image, imageName string, ext string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	defer file.Close()
+
 	err = jpeg.Encode(file, grayImage, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = archive(image)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func extractFileMeta(fileName string) (string, string) {
@@ -156,6 +149,28 @@ func extractFileMeta(fileName string) (string, string) {
 	name := strings.Split(nameAndExt, ".")[0]
 	ext := strings.Split(nameAndExt, ".")[1]
 	return name, ext
+}
+
+func archive(imageName string) error {
+	archive, err := archiver.FilesFromDisk(nil, map[string]string{strings.Join([]string{"files/", imageName}, ""): imageName})
+	if err != nil {
+		return err
+	}
+
+	out, err := os.Create(strings.Join([]string{imageName, ".zip"}, ""))
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	format := archiver.CompressedArchive{
+		Archival: archiver.Zip{},
+	}
+	err = format.Archive(context.Background(), out, archive)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
