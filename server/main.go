@@ -27,6 +27,10 @@ func greet(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world"))
 }
 
+func downloadFile(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func upload(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 
@@ -42,6 +46,12 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 	// check if no filter option in request body
 	if len(r.MultipartForm.Value["filter"]) <= 0 {
+		w.WriteHeader(400)
+		return
+	}
+
+	// check if no sessionId in request body
+	if len(r.MultipartForm.Value["uid"]) <= 0 {
 		w.WriteHeader(400)
 		return
 	}
