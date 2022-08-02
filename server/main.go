@@ -80,14 +80,14 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// apply filter to images
-		err = applyFilter(img, r.MultipartForm.Value["filter"][0])
+		err = applyFilter(img, r.MultipartForm.Value["filter"][0], r.MultipartForm.Value["uid"][0])
 		if err != nil {
 			w.WriteHeader(int(400))
 			return
 		}
 	}
 
-	err = archive(images)
+	err = archive(images, r.MultipartForm.Value["uid"][0])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func saveFile(file *multipart.File, filename string) (*os.File, error) {
 	return dst, nil
 }
 
-func applyFilter(img *os.File, filterType string) error {
+func applyFilter(img *os.File, filterType string, uid string) error {
 	image, err := imgio.Open(img.Name())
 	if err != nil {
 		log.Fatal(err)
@@ -122,7 +122,7 @@ func applyFilter(img *os.File, filterType string) error {
 
 	switch filterType {
 	case "gray":
-		grayFilter(image, img.Name(), path.Ext(img.Name()))
+		grayFilter(image, img.Name(), path.Ext(img.Name()), uid)
 		return nil
 	default:
 		return errors.New("Invalid filter")
@@ -139,11 +139,10 @@ func validImageType(imgType string) bool {
 	return false
 }
 
-func grayFilter(myimage image.Image, imageName string, ext string) {
+func grayFilter(myimage image.Image, imageName string, ext string, uid string) {
 	grayImage := effect.Grayscale(myimage)
 	filename, ext := extractFileMeta(imageName)
-	image := fmt.Sprintf("Gray_%s.%s", filename, ext)
-
+	image := fmt.Sprintf("%s_Gray_%s.%s", uid, filename, ext)
 	// Check if directory does not exist
 	if _, err := os.Stat("files/cat"); os.IsNotExist(err) {
 		fmt.Println(os.IsNotExist(err))
@@ -173,13 +172,13 @@ func extractFileMeta(fileName string) (string, string) {
 	return name, ext
 }
 
-func archive(imageNames []string) error {
+func archive(imageNames []string, uid string) error {
 	images := make(map[string]string)
 	for i := 0; i < len(imageNames); i++ {
-		key := "files/cat/Gray_" + imageNames[i]
+		key := "files/cat/" + uid + "_" + "Gray_" + imageNames[i]
+		fmt.Println(key)
 		images[key] = ""
 	}
-	fmt.Println(images)
 	archive, err := archiver.FilesFromDisk(nil, images)
 	if err != nil {
 		return err
@@ -213,23 +212,4 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// catFile, err := os.Open("cat1.jpeg")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer catFile.Close()
-
-	// ext := path.Ext(catFile.Name())
-	// fmt.Println(ext)
-
-	// cat, _, err := image.Decode(catFile)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// img, err := imgio.Open()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// blackAndWhiteFilter(img, imgName, imgExtension)
 }
