@@ -1,6 +1,11 @@
+if (localStorage.getItem("uid") !== null) {
+    localStorage.removeItem("uid")
+}
+
 const sub_btn = document.getElementById("sub_btn")
 const form = document.getElementById("form")
 const maxFileSize = 1024 * 1024
+const uid = crypto.randomUUID();
 
 sub_btn.addEventListener("click", async (e) => {
     e.preventDefault()
@@ -14,11 +19,15 @@ sub_btn.addEventListener("click", async (e) => {
         formData.append('files', files[i])
     }
     formData.append('filter', "gray")
+    formData.append('uid', uid)
 
     console.log(formData)
     try {
         let res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData })
-        console.log(res)
+        localStorage.setItem("uid", uid)
+        if (res.status === 200) {
+            window.location = "file:///D:/golang/image/client/download.html"
+        }
     } catch (err) {
         if ((err.message === "Failed to fetch" && totalSize >= maxFileSize) || (res.status === 400)) {
             console.log("File is too large")
