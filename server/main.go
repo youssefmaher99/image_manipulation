@@ -23,11 +23,34 @@ import (
 	"github.com/mholt/archiver/v4"
 )
 
-var tars []string
+var inMemoryArchives []string
 
-func greet(w http.ResponseWriter, r *http.Request) {
+func checkStatus(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	w.Write([]byte("hello world"))
+	w.WriteHeader(http.StatusOK)
+}
+
+func sessionClosed(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	fileName := chi.URLParam(r, "uid")
+	fmt.Println(fileName)
+	if !fileExist(fileName) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	removeFromInMemoryArchives(fileName)
+}
+
+func removeFromInMemoryArchives(fileName string) {
+	fmt.Printf("Before : %v\n", inMemoryArchives)
+	for i := 0; i < len(inMemoryArchives); i++ {
+		if inMemoryArchives[i] == fileName {
+			inMemoryArchives = append(inMemoryArchives[:i], inMemoryArchives[i+1:]...)
+			break
+		}
+	}
+	fmt.Printf("After : %v\n", inMemoryArchives)
+
 }
 
 func downloadFile(w http.ResponseWriter, r *http.Request) {
@@ -66,8 +89,8 @@ func checkFileStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func fileExist(fileName string) bool {
-	for i := 0; i < len(tars); i++ {
-		if tars[i] == fileName {
+	for i := 0; i < len(inMemoryArchives); i++ {
+		if inMemoryArchives[i] == fileName {
 			return true
 		}
 	}
@@ -242,18 +265,24 @@ func archive(imageNames []string, uid string) error {
 	if err != nil {
 		return err
 	}
-	tars = append(tars, uid)
+	inMemoryArchives = append(inMemoryArchives, uid)
 	return nil
 }
+
+// func getInMemoryArchives(w http.ResponseWriter, r *http.Request) {
+// w.Write([]byte(inMemoryArchives))
+// }
 
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Get("/test", greet)
+	r.Get("/test", checkStatus)
+	// r.Get("/mem", getInMemoryArchives)
 	r.Get("/check/{uid}", checkFileStatus)
 	r.Post("/upload", upload)
 	r.Get("/download/{uid}", downloadFile)
+	r.Get("/clear/{uid}", sessionClosed)
 
 	err := http.ListenAndServe(":5000", r)
 	if err != nil {
