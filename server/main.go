@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 
 	"github.com/anthonynsimon/bild/effect"
@@ -33,14 +34,20 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	fileName := chi.URLParam(r, "uid")
 	if !fileExist(fileName) {
-		fmt.Println("???/")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
 	w.Header().Set("Content-Type", "application/octet-stream")
-	filePath := fileName + ".zip"
+
+	ext := ".tar.gz"
+	targetPlatform := runtime.GOOS
+	if targetPlatform != "linux" {
+		ext = ".zip"
+	}
+
+	filePath := fileName + ext
 	http.ServeFile(w, r, filePath)
 }
 
@@ -217,14 +224,22 @@ func archive(imageNames []string, uid string) error {
 		return err
 	}
 
-	out, err := os.Create(strings.Join([]string{uid, ".zip"}, ""))
+	targetPlatform := runtime.GOOS
+	archiverExt := ""
+	if targetPlatform == "linux" {
+		archiverExt = ".tar.gz"
+	} else {
+		archiverExt = ".zip"
+	}
+
+	out, err := os.Create(strings.Join([]string{uid, archiverExt}, ""))
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
 	format := archiver.CompressedArchive{
-		Archival: archiver.Zip{},
+		Archival: archiver.Tar{},
 	}
 	err = format.Archive(context.Background(), out, archive)
 	if err != nil {
