@@ -22,13 +22,46 @@ import (
 	"github.com/mholt/archiver/v4"
 )
 
+var tars []string
+
 func greet(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	w.Write([]byte("hello world"))
 }
 
 func downloadFile(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	fileName := chi.URLParam(r, "uid")
+	if !fileExist(fileName) {
+		fmt.Println("???/")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	filePath := fileName + ".zip"
+	http.ServeFile(w, r, filePath)
+}
+
+func checkFileStatus(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	uid := chi.URLParam(r, "uid")
+	if fileExist(uid) {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func fileExist(fileName string) bool {
+	for i := 0; i < len(tars); i++ {
+		if tars[i] == fileName {
+			return true
+		}
+	}
+	return false
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +217,7 @@ func archive(imageNames []string, uid string) error {
 		return err
 	}
 
-	out, err := os.Create(strings.Join([]string{"Gray", ".zip"}, ""))
+	out, err := os.Create(strings.Join([]string{uid, ".zip"}, ""))
 	if err != nil {
 		return err
 	}
@@ -197,6 +230,7 @@ func archive(imageNames []string, uid string) error {
 	if err != nil {
 		return err
 	}
+	tars = append(tars, uid)
 	return nil
 }
 
@@ -205,7 +239,9 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Get("/test", greet)
+	r.Get("/check/{uid}", checkFileStatus)
 	r.Post("/upload", upload)
+	r.Get("/download/{uid}", downloadFile)
 
 	err := http.ListenAndServe(":5000", r)
 	if err != nil {
