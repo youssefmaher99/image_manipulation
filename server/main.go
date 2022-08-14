@@ -41,14 +41,17 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
 	w.Header().Set("Content-Type", "application/octet-stream")
 
-	ext := ".tar.gz"
-	targetPlatform := runtime.GOOS
-	if targetPlatform != "linux" {
-		ext = ".zip"
-	}
-
-	filePath := fileName + ext
+	archiveExt := extBasedOnPlatform()
+	filePath := fileName + archiveExt
 	http.ServeFile(w, r, filePath)
+}
+
+func extBasedOnPlatform() string {
+	if runtime.GOOS == "linux" {
+		return ".tar.gzip"
+	} else {
+		return ".zip"
+	}
 }
 
 func checkFileStatus(w http.ResponseWriter, r *http.Request) {
@@ -224,13 +227,7 @@ func archive(imageNames []string, uid string) error {
 		return err
 	}
 
-	targetPlatform := runtime.GOOS
-	archiverExt := ""
-	if targetPlatform == "linux" {
-		archiverExt = ".tar.gz"
-	} else {
-		archiverExt = ".zip"
-	}
+	archiverExt := extBasedOnPlatform()
 
 	out, err := os.Create(strings.Join([]string{uid, archiverExt}, ""))
 	if err != nil {
