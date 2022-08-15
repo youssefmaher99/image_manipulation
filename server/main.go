@@ -33,7 +33,7 @@ func checkStatus(w http.ResponseWriter, r *http.Request) {
 func sessionClosed(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	fileName := chi.URLParam(r, "uid")
-	fmt.Println(fileName)
+	// fmt.Println(fileName)
 	if !fileExist(fileName) {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -42,14 +42,14 @@ func sessionClosed(w http.ResponseWriter, r *http.Request) {
 }
 
 func removeFromInMemoryArchives(fileName string) {
-	fmt.Printf("Before : %v\n", inMemoryArchives)
+	// fmt.Printf("Before : %v\n", inMemoryArchives)
 	for i := 0; i < len(inMemoryArchives); i++ {
 		if inMemoryArchives[i] == fileName {
 			inMemoryArchives = append(inMemoryArchives[:i], inMemoryArchives[i+1:]...)
 			break
 		}
 	}
-	fmt.Printf("After : %v\n", inMemoryArchives)
+	// fmt.Printf("After : %v\n", inMemoryArchives)
 
 }
 
@@ -65,13 +65,13 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 
 	archiveExt := extBasedOnPlatform()
-	filePath := fileName + archiveExt
+	filePath := "archives/" + fileName + archiveExt
 	http.ServeFile(w, r, filePath)
 }
 
 func extBasedOnPlatform() string {
 	if runtime.GOOS == "linux" {
-		return ".tar.gzip"
+		return ".tar.gz"
 	} else {
 		return ".zip"
 	}
@@ -126,6 +126,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	var images []string
 	for _, file := range files {
 		images = append(images, file.Filename)
+		fmt.Println(file.Filename)
 		f, err := file.Open()
 		if err != nil {
 			log.Fatal(err)
@@ -140,18 +141,20 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// save uploaded files
-		img, err := saveFile(&f, file.Filename)
+		img, err := saveFile(&f, file.Filename, r.MultipartForm.Value["uid"][0])
 		if err != nil {
 			fmt.Println(err)
 		}
 
 		// apply filter to images
-		err = applyFilter(img, r.MultipartForm.Value["filter"][0], r.MultipartForm.Value["uid"][0])
+		err = applyFilter(img, r.MultipartForm.Value["filter"][0], r.MultipartForm.Value["uid"][0], file.Filename)
 		if err != nil {
 			w.WriteHeader(int(400))
 			return
 		}
 	}
+
+	fmt.Println(images)
 
 	err = archive(images, r.MultipartForm.Value["uid"][0])
 	if err != nil {
@@ -165,8 +168,8 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-func saveFile(file *multipart.File, filename string) (*os.File, error) {
-	dst, err := os.Create(path.Join("files", filename))
+func saveFile(file *multipart.File, filename, uid string) (*os.File, error) {
+	dst, err := os.Create(path.Join("uploaded", uid+"_"+filename))
 	defer (*file).Close()
 	defer dst.Close()
 	if err != nil {
@@ -180,7 +183,7 @@ func saveFile(file *multipart.File, filename string) (*os.File, error) {
 	return dst, nil
 }
 
-func applyFilter(img *os.File, filterType string, uid string) error {
+func applyFilter(img *os.File, filterType, uid, filename string) error {
 	image, err := imgio.Open(img.Name())
 	if err != nil {
 		log.Fatal(err)
@@ -188,7 +191,7 @@ func applyFilter(img *os.File, filterType string, uid string) error {
 
 	switch filterType {
 	case "gray":
-		grayFilter(image, img.Name(), path.Ext(img.Name()), uid)
+		grayFilter(image, filename, path.Ext(img.Name()), uid)
 		return nil
 	default:
 		return errors.New("Invalid filter")
@@ -209,16 +212,8 @@ func grayFilter(myimage image.Image, imageName string, ext string, uid string) {
 	grayImage := effect.Grayscale(myimage)
 	filename, ext := extractFileMeta(imageName)
 	image := fmt.Sprintf("%s_Gray_%s.%s", uid, filename, ext)
-	// Check if directory does not exist
-	if _, err := os.Stat("files/cat"); os.IsNotExist(err) {
-		fmt.Println(os.IsNotExist(err))
-		// Create directory
-		if err := os.Mkdir("cat", os.ModePerm); err != nil {
-			log.Fatal(err)
-		}
-	}
 
-	file, err := os.Create(path.Join("files", "cat", image))
+	file, err := os.Create(path.Join("filtered", image))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -232,19 +227,18 @@ func grayFilter(myimage image.Image, imageName string, ext string, uid string) {
 }
 
 func extractFileMeta(fileName string) (string, string) {
-	nameAndExt := strings.Split(fileName, "/")[1]
-	name := strings.Split(nameAndExt, ".")[0]
-	ext := strings.Split(nameAndExt, ".")[1]
+	name := strings.Split(fileName, ".")[0]
+	ext := strings.Split(fileName, ".")[1]
 	return name, ext
 }
 
 func archive(imageNames []string, uid string) error {
 	images := make(map[string]string)
 	for i := 0; i < len(imageNames); i++ {
-		key := "files/cat/" + uid + "_" + "Gray_" + imageNames[i]
-		fmt.Println(key)
+		key := "filtered/" + uid + "_" + "Gray_" + imageNames[i]
 		images[key] = ""
 	}
+	// fmt.Println(images)
 	archive, err := archiver.FilesFromDisk(nil, images)
 	if err != nil {
 		return err
@@ -252,7 +246,7 @@ func archive(imageNames []string, uid string) error {
 
 	archiverExt := extBasedOnPlatform()
 
-	out, err := os.Create(strings.Join([]string{uid, archiverExt}, ""))
+	out, err := os.Create(path.Join("archives", uid+archiverExt))
 	if err != nil {
 		return err
 	}
