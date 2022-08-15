@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -38,18 +39,77 @@ func sessionClosed(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+
 	removeFromInMemoryArchives(fileName)
+	removeFromDisk(fileName)
+}
+
+func removeFromDisk(fileName string) {
+
+	// find matching files in uploded directory
+	uplodedFiles, err := findMatchingFiles("uploaded", fileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// remove matching files in uploded directory
+	err = removeMatchingFiles(uplodedFiles)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// find matching files in uploded directory
+	filteredFiles, err := findMatchingFiles("filtered", fileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// remove matching files in uploded directory
+	err = removeMatchingFiles(filteredFiles)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// find matching files in uploded directory
+	archivesFiles, err := findMatchingFiles("archives", fileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// remove matching files in uploded directory
+	err = removeMatchingFiles(archivesFiles)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func findMatchingFiles(dir string, fileName string) ([]string, error) {
+	files, err := filepath.Glob(dir + "/" + fileName + "*")
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
+func removeMatchingFiles(files []string) error {
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func removeFromInMemoryArchives(fileName string) {
-	// fmt.Printf("Before : %v\n", inMemoryArchives)
+	fmt.Printf("Before : %v\n", inMemoryArchives)
 	for i := 0; i < len(inMemoryArchives); i++ {
 		if inMemoryArchives[i] == fileName {
 			inMemoryArchives = append(inMemoryArchives[:i], inMemoryArchives[i+1:]...)
 			break
 		}
 	}
-	// fmt.Printf("After : %v\n", inMemoryArchives)
+	fmt.Printf("After : %v\n", inMemoryArchives)
 
 }
 
@@ -126,7 +186,6 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	var images []string
 	for _, file := range files {
 		images = append(images, file.Filename)
-		fmt.Println(file.Filename)
 		f, err := file.Open()
 		if err != nil {
 			log.Fatal(err)
@@ -153,8 +212,6 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	fmt.Println(images)
 
 	err = archive(images, r.MultipartForm.Value["uid"][0])
 	if err != nil {
@@ -263,24 +320,26 @@ func archive(imageNames []string, uid string) error {
 	return nil
 }
 
-// func getInMemoryArchives(w http.ResponseWriter, r *http.Request) {
-// w.Write([]byte(inMemoryArchives))
-// }
-
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-
+	//
 	r.Get("/test", checkStatus)
 	// r.Get("/mem", getInMemoryArchives)
 	r.Get("/check/{uid}", checkFileStatus)
 	r.Post("/upload", upload)
 	r.Get("/download/{uid}", downloadFile)
 	r.Get("/clear/{uid}", sessionClosed)
-
+	//
 	err := http.ListenAndServe(":5000", r)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// files, err := filepath.Glob("archives/045c4395-444b-41bc-b0a0-9184afdb0fb9*")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println(files)
 
 }
