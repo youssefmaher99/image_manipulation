@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	_ "image/jpeg"
+
 	"io"
 	"log"
 	"mime/multipart"
@@ -58,25 +58,25 @@ func removeFromDisk(fileName string) {
 		fmt.Println(err)
 	}
 
-	// find matching files in uploded directory
+	// find matching files in filtered directory
 	filteredFiles, err := findMatchingFiles("filtered", fileName)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// remove matching files in uploded directory
+	// remove matching files in filtered directory
 	err = removeMatchingFiles(filteredFiles)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// find matching files in uploded directory
+	// find matching files in archives directory
 	archivesFiles, err := findMatchingFiles("archives", fileName)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// remove matching files in uploded directory
+	// remove matching files in archives directory
 	err = removeMatchingFiles(archivesFiles)
 	if err != nil {
 		fmt.Println(err)
@@ -323,23 +323,15 @@ func archive(imageNames []string, uid string) error {
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	//
+
 	r.Get("/test", checkStatus)
-	// r.Get("/mem", getInMemoryArchives)
 	r.Get("/check/{uid}", checkFileStatus)
 	r.Post("/upload", upload)
 	r.Get("/download/{uid}", downloadFile)
 	r.Get("/clear/{uid}", sessionClosed)
-	//
+
 	err := http.ListenAndServe(":5000", r)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// files, err := filepath.Glob("archives/045c4395-444b-41bc-b0a0-9184afdb0fb9*")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println(files)
-
 }
