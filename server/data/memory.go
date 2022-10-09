@@ -4,6 +4,8 @@ import "fmt"
 
 type InMemory []string
 
+var InMemoryArchives InMemory
+
 func (m *InMemory) FileExist(fileName string) bool {
 	for i := 0; i < len(*m); i++ {
 		if (*m)[i] == fileName {
@@ -28,5 +30,3 @@ func (m *InMemory) Remove(fileName string) {
 func (m *InMemory) Add(fileName string) {
 	(*m) = append((*m), fileName)
 }
-
-var InMemoryArchives InMemory

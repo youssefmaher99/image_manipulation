@@ -3,14 +3,22 @@ package handlers
 import (
 	"fmt"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"server/data"
 	"server/util"
-	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
+
+type Image struct {
+	Name    string
+	Path    string
+	Filter  string
+	NewPath string
+	Size    int
+	TTL     time.Duration
+}
 
 func CheckStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
@@ -20,8 +28,8 @@ func CheckStatus(w http.ResponseWriter, r *http.Request) {
 func Upload(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 
-	// less than 5 MB max
-	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*500)
+	// less than 50 MB max
+	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*50)
 
 	err := r.ParseMultipartForm(5000)
 	if err != nil {
@@ -43,46 +51,29 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := r.MultipartForm.File["files"]
-	var images []string
-	wg := sync.WaitGroup{}
 	for _, file := range files {
-		wg.Add(1)
-		go func(file *multipart.FileHeader) {
-			images = append(images, file.Filename)
-			f, err := file.Open()
-			if err != nil {
-				log.Fatal(err)
-				// break
-				return
-			}
-			defer f.Close()
 
-			// validate image type
-			if !util.ValidImageType(file.Header["Content-Type"][0]) {
-				w.WriteHeader(400)
-				return
-			}
+		f, err := file.Open()
+		if err != nil {
+			w.WriteHeader(400)
+			log.Fatal(err)
+			return
+		}
+		defer f.Close()
 
-			// save uploaded files
-			img, err := util.SaveFile(&f, file.Filename, r.MultipartForm.Value["uid"][0])
-			if err != nil {
-				fmt.Println(err)
-			}
+		// validate image type
+		if !util.ValidImageType(file.Header["Content-Type"][0]) {
+			w.WriteHeader(400)
+			log.Fatal("Invalid data type")
+			return
+		}
 
-			// apply filter to images
-			err = util.ApplyFilter(img, r.MultipartForm.Value["filter"][0], r.MultipartForm.Value["uid"][0], file.Filename)
-			if err != nil {
-				w.WriteHeader(int(400))
-				return
-			}
-			wg.Done()
-		}(file)
-	}
-	wg.Wait()
-	fmt.Println(images)
-	err = util.Archive(images, r.MultipartForm.Value["uid"][0])
-	if err != nil {
-		log.Fatal(err)
+		_, err = util.SaveFile(&f, file.Filename, r.MultipartForm.Value["uid"][0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		// TODO : create image object
+		// TODO : push image object to queue
 	}
 	w.WriteHeader(200)
 }
