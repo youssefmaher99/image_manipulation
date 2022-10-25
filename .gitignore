@@ -1,10 +1,8 @@
 .vscode
 TODO.md
-server/archives/*
-server/!archives/README
-
-server/uploaded/*
-server/!uploaded/README
-
-server/filtered/*
-server/!filtered/README
+./server/archives/*
+./server/!archives/README
+./server/uploaded/*
+./server/!uploaded/README
+./server/filtered/*
+./server/!filtered/README
