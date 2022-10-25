@@ -21,12 +21,12 @@ sub_btn.addEventListener("click", async (e) => {
     formData.append('filter', "gray")
     formData.append('uid', uid)
 
-    console.log(formData)
+    
     try {
         let res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData })
         localStorage.setItem("uid", uid)
         if (res.status === 200) {
-            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/download.html"
+            // window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/download.html"
         }
     } catch (err) {
         if ((err.message === "Failed to fetch" && totalSize >= maxFileSize) || (res.status === 400)) {
