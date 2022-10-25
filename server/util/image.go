@@ -8,10 +8,23 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/anthonynsimon/bild/effect"
 	"github.com/anthonynsimon/bild/imgio"
 )
+
+type Image struct {
+	Name string
+	Path string
+}
+
+type Job struct {
+	Filter string
+	Images []Image
+	TTl    time.Duration
+	Uid    string
+}
 
 func ValidImageType(imgType string) bool {
 	validImgTypes := []string{"image/jpg", "image/jpeg", "image/png"}
@@ -28,24 +41,23 @@ func ApplyFilter(img *os.File, filterType, uid, filename string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	switch filterType {
 	case "gray":
-		grayFilter(image, filename, path.Ext(img.Name()), uid)
+		grayFilter(image, filename, uid)
 		return nil
 	default:
-		return errors.New("Invalid filter")
+		return errors.New("invalid filter")
 	}
 }
 
-func grayFilter(myimage image.Image, imageName string, ext string, uid string) {
+func grayFilter(myimage image.Image, imageName string, uid string) {
 	grayImage := effect.Grayscale(myimage)
 	filename, ext := ExtractFileMeta(imageName)
 	image := fmt.Sprintf("%s_Gray_%s.%s", uid, filename, ext)
 
 	file, err := os.Create(path.Join("filtered", image))
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 	defer file.Close()

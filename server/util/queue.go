@@ -10,6 +10,10 @@ type Queue struct {
 	lock  sync.Mutex
 }
 
+func CreateQueue() *Queue {
+	return &Queue{}
+}
+
 func (q *Queue) Enqueue(data any) {
 	q.lock.Lock()
 	defer q.lock.Unlock()

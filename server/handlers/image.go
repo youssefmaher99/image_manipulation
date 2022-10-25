@@ -4,21 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"server/data"
 	"server/util"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 )
 
-type Image struct {
-	Name    string
-	Path    string
-	Filter  string
-	NewPath string
-	Size    int
-	TTL     time.Duration
-}
+var MyQueue *util.Queue
 
 func CheckStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
@@ -51,6 +44,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := r.MultipartForm.File["files"]
+	job := util.Job{Uid: r.MultipartForm.Value["uid"][0], Filter: r.MultipartForm.Value["filter"][0]}
 	for _, file := range files {
 
 		f, err := file.Open()
@@ -72,16 +66,17 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		// TODO : create image object
-		// TODO : push image object to queue
+
+		img := util.Image{Name: file.Filename, Path: path.Join("uploaded", r.MultipartForm.Value["uid"][0]+"_"+file.Filename)}
+		job.Images = append(job.Images, img)
 	}
+	MyQueue.Enqueue(job)
 	w.WriteHeader(200)
 }
 
 func SessionClosed(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 	fileName := chi.URLParam(r, "uid")
-	// fmt.Println(fileName)
 	if !data.InMemoryArchives.FileExist(fileName) {
 		w.WriteHeader(http.StatusNotFound)
 		return
