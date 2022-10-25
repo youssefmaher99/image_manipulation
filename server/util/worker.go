@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -14,7 +15,7 @@ func SpawnWorkers(queue *Queue) {
 		}
 		workersPool <- struct{}{}
 		go func(job any) {
-
+			fmt.Println("new worker started processing")
 			worker(job)
 			<-workersPool
 		}(queue.Dequeue())
@@ -52,4 +53,5 @@ func worker(job any) {
 		log.Fatal(err)
 	}
 
+	fmt.Println("worker finished processing")
 }

@@ -14,7 +14,6 @@ import (
 var MyQueue *util.Queue
 
 func main() {
-
 	MyQueue = util.CreateQueue()
 	go func(MyQueue *util.Queue) {
 		util.SpawnWorkers(MyQueue)
