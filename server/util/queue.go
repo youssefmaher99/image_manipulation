@@ -6,7 +6,7 @@ import (
 )
 
 type Queue struct {
-	queue []any
+	queue []Job
 	lock  sync.Mutex
 }
 
@@ -14,16 +14,16 @@ func CreateQueue() *Queue {
 	return &Queue{}
 }
 
-func (q *Queue) Enqueue(data any) {
+func (q *Queue) Enqueue(data Job) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.queue = append(q.queue, data)
 }
 
-func (q *Queue) Dequeue() any {
+func (q *Queue) Dequeue() Job {
 	q.lock.Lock()
 	defer q.lock.Unlock()
-	var val any = q.queue[0]
+	var val Job = q.queue[0]
 	q.queue = q.queue[1:]
 	return val
 }

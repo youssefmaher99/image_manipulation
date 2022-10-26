@@ -14,7 +14,7 @@ func SpawnWorkers(queue *Queue) {
 			continue
 		}
 		workersPool <- struct{}{}
-		go func(job any) {
+		go func(job Job) {
 			fmt.Println("new worker started processing")
 			worker(job)
 			<-workersPool
@@ -23,17 +23,16 @@ func SpawnWorkers(queue *Queue) {
 	}
 }
 
-func worker(job any) {
+func worker(job Job) {
 	// apply filter
-	// TODO : fix queue to accept data of type handlers.job so that i don't need type assertion
 
-	for i := 0; i < len(job.(Job).Images); i++ {
-		image, err := os.Open(job.(Job).Images[i].Path)
+	for i := 0; i < len(job.Images); i++ {
+		image, err := os.Open(job.Images[i].Path)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = ApplyFilter(image, job.(Job).Filter, job.(Job).Uid, job.(Job).Images[i].Name)
+		err = ApplyFilter(image, job.Filter, job.Uid, job.Images[i].Name)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -41,14 +40,14 @@ func worker(job any) {
 
 	getImageNames := func() []string {
 		images := []string{}
-		for _, imageName := range job.(Job).Images {
+		for _, imageName := range job.Images {
 			images = append(images, imageName.Name)
 		}
 		return images
 	}
 
 	// archive images
-	err := Archive(getImageNames(), job.(Job).Uid)
+	err := Archive(getImageNames(), job.Uid)
 	if err != nil {
 		log.Fatal(err)
 	}
