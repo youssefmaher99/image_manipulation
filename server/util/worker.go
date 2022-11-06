@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"server/notification"
 )
 
 var workersPool = make(chan struct{}, 8)
@@ -53,4 +54,7 @@ func worker(job Job) {
 	}
 
 	fmt.Println("worker finished processing")
+
+	// notify user that work is done
+	notification.NotificationChans[job.Uid] <- struct{}{}
 }

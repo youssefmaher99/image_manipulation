@@ -21,7 +21,7 @@ func LoadRoutes(r *chi.Mux) {
 		r.Get("/check/{uid}", handlers.CheckFileStatus)
 		r.Get("/clear/{uid}", handlers.SessionClosed)
 		r.Get("/download/{uid}", handlers.DownloadFile)
-
+		r.Get("/subscribe/{uid}", handlers.Subscribe)
 		r.Post("/upload", handlers.Upload)
 	})
 }

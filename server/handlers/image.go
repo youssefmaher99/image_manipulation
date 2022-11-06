@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"path"
 	"server/data"
+	"server/notification"
 	"server/util"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 var MyQueue *util.Queue
@@ -16,6 +18,57 @@ var MyQueue *util.Queue
 func CheckStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 	w.WriteHeader(http.StatusOK)
+}
+
+func Subscribe(w http.ResponseWriter, r *http.Request) {
+	util.EnableCors(&w)
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// validate uuid
+	_, err := uuid.Parse(chi.URLParam(r, "uid"))
+	if err != nil {
+		w.WriteHeader(400)
+		return
+	}
+
+	uuid := chi.URLParam(r, "uid")
+
+	// validate if this uuid is not registered
+	if !data.InMemoryUUID.ItemExist(uuid) {
+		w.WriteHeader(400)
+		return
+	}
+
+	// create channel
+	notifyChan := make(chan struct{})
+
+	// add channel to chansStore
+	notification.NotificationChans.Add(uuid, notifyChan)
+
+	// closing mechanism
+	// TODO : to be improved that later
+	defer func() {
+		notification.NotificationChans.Remove(uuid)
+	}()
+
+	// loop (presist connection) and wait for the channel to receive confirmation that file is now ready to be downloaded
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		log.Fatal("Could not init http flusher")
+	}
+
+	for {
+		select {
+		case <-notification.NotificationChans[uuid]:
+			fmt.Fprintf(w, "data: %s\n\n", "1")
+			flusher.Flush()
+		case <-r.Context().Done():
+			fmt.Printf("Client %s disconnected\n", uuid)
+			return
+		}
+	}
 }
 
 func Upload(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +92,13 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	// check if no sessionId in request body
 	if len(r.MultipartForm.Value["uid"]) <= 0 {
+		w.WriteHeader(400)
+		return
+	}
+
+	// validate uuid
+	_, err = uuid.Parse(r.MultipartForm.Value["uid"][0])
+	if err != nil {
 		w.WriteHeader(400)
 		return
 	}
@@ -70,6 +130,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		img := util.Image{Name: file.Filename, Path: path.Join("uploaded", r.MultipartForm.Value["uid"][0]+"_"+file.Filename)}
 		job.Images = append(job.Images, img)
 	}
+
+	data.InMemoryUUID.Add(r.MultipartForm.Value["uid"][0])
 	MyQueue.Enqueue(job)
 	w.WriteHeader(200)
 }
@@ -77,12 +139,13 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 func SessionClosed(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 	fileName := chi.URLParam(r, "uid")
-	if !data.InMemoryArchives.FileExist(fileName) {
+	if !data.InMemoryArchives.ItemExist(fileName) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	data.InMemoryArchives.Remove(fileName)
+	data.InMemoryUUID.Remove(chi.URLParam(r, "uid"))
 	data.RemoveFromDisk(fileName)
 }
 
@@ -90,7 +153,7 @@ func CheckFileStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 	uid := chi.URLParam(r, "uid")
 
-	if data.InMemoryArchives.FileExist(uid) {
+	if data.InMemoryArchives.ItemExist(uid) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -101,7 +164,7 @@ func CheckFileStatus(w http.ResponseWriter, r *http.Request) {
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 	fileName := chi.URLParam(r, "uid")
-	if !data.InMemoryArchives.FileExist(fileName) {
+	if !data.InMemoryArchives.ItemExist(fileName) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
