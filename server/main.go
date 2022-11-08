@@ -29,7 +29,7 @@ func main() {
 	// Inject global queue in package
 	handlers.MyQueue = MyQueue
 
-	// Graceful shutdown cleaning dirs
+	//Graceful shutdown cleaning dirs
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 	go func() {

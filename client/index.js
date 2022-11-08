@@ -1,13 +1,41 @@
-if (localStorage.getItem("uid") !== null) {
-    localStorage.removeItem("uid")
-}
+// if (localStorage.getItem("uid") !== null) {
+//     localStorage.removeItem("uid")
+// }
 
 const sub_btn = document.getElementById("sub_btn")
 const form = document.getElementById("form")
 const maxFileSize = 1024 * 1024
-const uid = crypto.randomUUID();
+let oldDownload;
+
+(async function () {
+    let uid = localStorage.getItem("uid")
+
+    if (!uid) {
+        return
+    }
+
+    oldDownload = await fetch(`http://localhost:5000/check/${uid}`)
+    if (oldDownload.status !== 200) {
+        return
+    }
+
+    oldDownload = document.getElementById("old_download");
+
+    if (oldDownload) {
+        document.getElementById("old_files_container").style.display = "block";
+        oldDownload.addEventListener("click", (e) => {
+            e.preventDefault();
+            dowloadFiles();
+        })
+    }
+})()
+
+
+
+
 
 sub_btn.addEventListener("click", async (e) => {
+    let uid = crypto.randomUUID();
     e.preventDefault()
     const formData = new FormData()
     const file = document.getElementById("myFile")
@@ -21,12 +49,12 @@ sub_btn.addEventListener("click", async (e) => {
     formData.append('filter', "gray")
     formData.append('uid', uid)
 
-    
+
     try {
         let res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData })
         localStorage.setItem("uid", uid)
         if (res.status === 200) {
-            // window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/download.html"
+            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/download.html"
         }
     } catch (err) {
         if ((err.message === "Failed to fetch" && totalSize >= maxFileSize) || (res.status === 400)) {
@@ -44,4 +72,31 @@ function arrayOfFiles(objectFiles) {
         }
     }
     return files
+}
+
+
+async function dowloadFiles() {
+    // send request to check if file is created with the uid
+    // let res = await fetch(`http://localhost:5000/check/${uid}`)
+
+    // if (res.status !== 200) {
+    //     return
+    // }
+    let uid = localStorage.getItem("uid");
+    res = await fetch(`http://localhost:5000/download/${uid}`)
+
+    if (res.status !== 200) {
+        return
+    }
+
+    const bloby = await res.blob()
+    const href = URL.createObjectURL(bloby)
+    const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "GrayImages" })
+
+    document.body.append(a)
+    a.click()
+
+    URL.revokeObjectURL(href)
+    a.remove()
+
 }

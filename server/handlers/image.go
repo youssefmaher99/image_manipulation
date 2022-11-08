@@ -7,6 +7,7 @@ import (
 	"path"
 	"server/data"
 	"server/notification"
+	"server/presist"
 	"server/util"
 
 	"github.com/go-chi/chi/v5"
@@ -96,15 +97,23 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	form_uuid := r.MultipartForm.Value["uid"][0]
+
 	// validate uuid
-	_, err = uuid.Parse(r.MultipartForm.Value["uid"][0])
+	_, err = uuid.Parse(form_uuid)
 	if err != nil {
 		w.WriteHeader(400)
 		return
 	}
 
+	// validate if this uuid is already registered
+	if data.InMemoryUUID.ItemExist(form_uuid) {
+		w.WriteHeader(400)
+		return
+	}
+
 	files := r.MultipartForm.File["files"]
-	job := util.Job{Uid: r.MultipartForm.Value["uid"][0], Filter: r.MultipartForm.Value["filter"][0]}
+	job := util.Job{Uid: form_uuid, Filter: r.MultipartForm.Value["filter"][0]}
 	for _, file := range files {
 
 		f, err := file.Open()
@@ -122,16 +131,17 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = util.SaveFile(&f, file.Filename, r.MultipartForm.Value["uid"][0])
+		_, err = util.SaveFile(&f, file.Filename, form_uuid)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		img := util.Image{Name: file.Filename, Path: path.Join("uploaded", r.MultipartForm.Value["uid"][0]+"_"+file.Filename)}
+		img := util.Image{Name: file.Filename, Path: path.Join("uploaded", form_uuid+"_"+file.Filename)}
 		job.Images = append(job.Images, img)
 	}
 
-	data.InMemoryUUID.Add(r.MultipartForm.Value["uid"][0])
+	data.InMemoryUUID.Add(form_uuid)
+	presist.AddJob(job)
 	MyQueue.Enqueue(job)
 	w.WriteHeader(200)
 }
@@ -144,6 +154,7 @@ func SessionClosed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO : remove all refrences from redis
 	data.InMemoryArchives.Remove(fileName)
 	data.InMemoryUUID.Remove(chi.URLParam(r, "uid"))
 	data.RemoveFromDisk(fileName)
@@ -152,6 +163,12 @@ func SessionClosed(w http.ResponseWriter, r *http.Request) {
 func CheckFileStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 	uid := chi.URLParam(r, "uid")
+
+	_, err := uuid.Parse(uid)
+	if err != nil {
+		w.WriteHeader(400)
+		return
+	}
 
 	if data.InMemoryArchives.ItemExist(uid) {
 		w.WriteHeader(http.StatusOK)

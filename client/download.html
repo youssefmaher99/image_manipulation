@@ -9,27 +9,49 @@
 </head>
 
 <body>
-    this is download page
+    <div style="font-size: 1.7rem;">Thank you for using our service your download will start shortly</div>
+    <button id="new_btn" style="margin-top: 2rem; padding: 12px;">NEW +</button>
 
 
 
     <script>
+        let new_btn = document.getElementById("new_btn")
+
         let uid = localStorage.getItem("uid")
         if (uid === null) {
             window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/index.html"
         }
 
-        window.addEventListener("unload", async () => {
-            await fetch(`http://localhost:5000/clear/${uid}`, { keepalive: true })
+
+        // window.addEventListener("unload", async () => {
+            //     await fetch(`http://localhost:5000/clear/${uid}`, { keepalive: true })
+            // })
+            
+            
+        new_btn.addEventListener("click", async () => {
+            await fetch(`http://localhost:5000/clear/${uid}`)
+            localStorage.removeItem("uid")
+            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/index.html"
         })
 
-        setTimeout(async () => {
-            // send request to check if file is created with the uid
-            let res = await fetch(`http://localhost:5000/check/${uid}`)
+        const eventSource = new EventSource(`http://localhost:5000/subscribe/${uid}`)
 
-            if (res.status !== 200) {
-                return
-            }
+        eventSource.onmessage = (e) => {
+            dowloadFiles()
+        }
+
+        eventSource.onerror = (e) => {
+            // TODO : handle error by displaying something
+            console.log(e)
+        }
+
+        async function dowloadFiles() {
+            // send request to check if file is created with the uid
+            // let res = await fetch(`http://localhost:5000/check/${uid}`)
+
+            // if (res.status !== 200) {
+            //     return
+            // }
 
             res = await fetch(`http://localhost:5000/download/${uid}`)
 
@@ -47,7 +69,7 @@
             URL.revokeObjectURL(href)
             a.remove()
 
-        }, 5000)
+        }
     </script>
 </body>
 

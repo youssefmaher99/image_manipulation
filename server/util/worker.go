@@ -57,4 +57,7 @@ func worker(job Job) {
 
 	// notify user that work is done
 	notification.NotificationChans[job.Uid] <- struct{}{}
+
+	// mark job as done in redis
+	// presist.UpdateJob(job.Uid)
 }
