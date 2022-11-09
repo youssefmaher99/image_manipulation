@@ -6,8 +6,9 @@ import (
 	"os/exec"
 	"os/signal"
 	"server/handlers"
+	"server/queue"
 	"server/router"
-	"server/util"
+	"server/worker"
 
 	"log"
 	"net/http"
@@ -15,15 +16,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-var MyQueue *util.Queue
+var MyQueue *queue.Queue
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	MyQueue = util.CreateQueue()
+	MyQueue = queue.CreateQueue()
 
-	go func(MyQueue *util.Queue) {
-		util.SpawnWorkers(MyQueue)
+	go func(MyQueue *queue.Queue) {
+		worker.SpawnWorkers(MyQueue)
 	}(MyQueue)
 
 	// Inject global queue in package

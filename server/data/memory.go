@@ -1,29 +1,21 @@
 package data
 
-type InMemory []string
+type InMemory map[string]string
 
-var InMemoryArchives InMemory
-var InMemoryUUID InMemory
+var InMemoryArchives InMemory = make(InMemory)
+var InMemoryUUID InMemory = make(InMemory)
 
-func (m *InMemory) ItemExist(item string) bool {
-	for i := 0; i < len(*m); i++ {
-		if (*m)[i] == item {
-			return true
-		}
+func (m InMemory) ItemExist(item string) bool {
+	if _, ok := m[item]; ok {
+		return true
 	}
 	return false
 }
 
-func (m *InMemory) Remove(item string) {
-	for i := 0; i < len(*m); i++ {
-		if (*m)[i] == item {
-			*m = append((*m)[:i], (*m)[i+1:]...)
-			break
-		}
-	}
-
+func (m InMemory) Remove(item string) {
+	delete(m, item)
 }
 
-func (m *InMemory) Add(item string) {
-	(*m) = append((*m), item)
+func (m InMemory) Add(item string, expiry string) {
+	m[item] = expiry
 }

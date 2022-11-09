@@ -9,7 +9,7 @@ import (
 	"github.com/mholt/archiver/v4"
 )
 
-func Archive(imageNames []string, uid string) error {
+func Archive(imageNames []string, uid string, expiration string) error {
 	images := make(map[string]string)
 	for i := 0; i < len(imageNames); i++ {
 		key := "filtered/" + uid + "_" + "Gray_" + imageNames[i]
@@ -36,6 +36,7 @@ func Archive(imageNames []string, uid string) error {
 	if err != nil {
 		return err
 	}
-	data.InMemoryArchives.Add(uid)
+	// HACK
+	data.InMemoryArchives.Add(uid, expiration)
 	return nil
 }

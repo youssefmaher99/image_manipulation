@@ -8,13 +8,14 @@ import (
 	"server/data"
 	"server/notification"
 	"server/presist"
+	"server/queue"
 	"server/util"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
-var MyQueue *util.Queue
+var MyQueue *queue.Queue
 
 func CheckStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
@@ -140,7 +141,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		job.Images = append(job.Images, img)
 	}
 
-	data.InMemoryUUID.Add(form_uuid)
+	data.InMemoryUUID.Add(form_uuid, "")
 	presist.AddJob(job)
 	MyQueue.Enqueue(job)
 	w.WriteHeader(200)
@@ -155,6 +156,7 @@ func SessionClosed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO : remove all refrences from redis
+	presist.DeleteJob(chi.URLParam(r, "uid"))
 	data.InMemoryArchives.Remove(fileName)
 	data.InMemoryUUID.Remove(chi.URLParam(r, "uid"))
 	data.RemoveFromDisk(fileName)

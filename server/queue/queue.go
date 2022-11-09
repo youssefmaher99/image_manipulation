@@ -1,12 +1,13 @@
-package util
+package queue
 
 import (
 	"fmt"
+	"server/util"
 	"sync"
 )
 
 type Queue struct {
-	queue []Job
+	queue []util.Job
 	lock  sync.Mutex
 }
 
@@ -14,16 +15,16 @@ func CreateQueue() *Queue {
 	return &Queue{}
 }
 
-func (q *Queue) Enqueue(data Job) {
+func (q *Queue) Enqueue(data util.Job) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.queue = append(q.queue, data)
 }
 
-func (q *Queue) Dequeue() Job {
+func (q *Queue) Dequeue() util.Job {
 	q.lock.Lock()
 	defer q.lock.Unlock()
-	var val Job = q.queue[0]
+	var val util.Job = q.queue[0]
 	q.queue = q.queue[1:]
 	return val
 }
