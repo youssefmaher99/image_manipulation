@@ -1,13 +1,24 @@
 package presist
 
-import "github.com/go-redis/redis/v9"
+import (
+	"context"
+	"server/logger"
+
+	"github.com/go-redis/redis/v9"
+)
 
 var rds *redis.Client = ConnectToRedis()
 
 func ConnectToRedis() *redis.Client {
-	return redis.NewClient(&redis.Options{
+	conn := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+
+	if _, err := conn.Ping(context.Background()).Result(); err != nil {
+		logger.MyLog.Fatal(err)
+	}
+	logger.MyLog.Println("REDIS CONNECTED")
+	return conn
 }

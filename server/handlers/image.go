@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path"
 	"server/data"
+	"server/logger"
 	"server/notification"
 	"server/presist"
 	"server/queue"
@@ -58,7 +58,7 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 	// loop (presist connection) and wait for the channel to receive confirmation that file is now ready to be downloaded
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		log.Fatal("Could not init http flusher")
+		logger.MyLog.Fatal("Could not init http flusher")
 	}
 
 	for {
@@ -120,7 +120,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		f, err := file.Open()
 		if err != nil {
 			w.WriteHeader(400)
-			log.Fatal(err)
+			logger.MyLog.Fatal(err)
 			return
 		}
 		defer f.Close()
@@ -128,13 +128,13 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		// validate image type
 		if !util.ValidImageType(file.Header["Content-Type"][0]) {
 			w.WriteHeader(400)
-			log.Fatal("Invalid data type")
+			logger.MyLog.Fatal("Invalid data type")
 			return
 		}
 
 		_, err = util.SaveFile(&f, file.Filename, form_uuid)
 		if err != nil {
-			log.Fatal(err)
+			logger.MyLog.Fatal(err)
 		}
 
 		img := util.Image{Name: file.Filename, Path: path.Join("uploaded", form_uuid+"_"+file.Filename)}

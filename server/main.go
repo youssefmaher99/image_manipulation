@@ -6,11 +6,11 @@ import (
 	"os/exec"
 	"os/signal"
 	"server/handlers"
+	"server/logger"
 	"server/queue"
 	"server/router"
 	"server/worker"
 
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -19,8 +19,6 @@ import (
 var MyQueue *queue.Queue
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
 	MyQueue = queue.CreateQueue()
 
 	go func(MyQueue *queue.Queue) {
@@ -44,8 +42,8 @@ func main() {
 	r := router.CreateChiRouter(middleware.Logger)
 	router.LoadRoutes(r)
 
-	log.Println("Server is connected")
-	log.Fatal(http.ListenAndServe(":5000", r))
+	logger.MyLog.Println("SERVER CONNECTED")
+	logger.MyLog.Fatal(http.ListenAndServe(":5000", r))
 }
 
 func cleanDirs(dirs map[string]string) {

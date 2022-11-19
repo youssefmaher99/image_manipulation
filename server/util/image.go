@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"log"
 	"os"
 	"path"
+	"server/logger"
 	"time"
 
 	"github.com/anthonynsimon/bild/effect"
@@ -39,7 +39,7 @@ func ValidImageType(imgType string) bool {
 func ApplyFilter(img *os.File, filterType, uid, filename string) error {
 	image, err := imgio.Open(img.Name())
 	if err != nil {
-		log.Fatal(err)
+		logger.MyLog.Fatal(err)
 	}
 	switch filterType {
 	case "gray":
@@ -57,13 +57,13 @@ func grayFilter(myimage image.Image, imageName string, uid string) {
 
 	file, err := os.Create(path.Join("filtered", image))
 	if err != nil {
-		log.Fatal(err)
+		logger.MyLog.Fatal(err)
 	}
 
 	defer file.Close()
 
 	err = jpeg.Encode(file, grayImage, nil)
 	if err != nil {
-		log.Fatal(err)
+		logger.MyLog.Fatal(err)
 	}
 }

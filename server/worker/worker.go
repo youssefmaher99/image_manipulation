@@ -2,8 +2,8 @@ package worker
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"server/logger"
 	"server/notification"
 	"server/presist"
 	"server/queue"
@@ -36,12 +36,12 @@ func worker(job util.Job) {
 	for i := 0; i < len(job.Images); i++ {
 		image, err := os.Open(job.Images[i].Path)
 		if err != nil {
-			log.Fatal(err)
+			logger.MyLog.Fatal(err)
 		}
 
 		err = util.ApplyFilter(image, job.Filter, job.Uid, job.Images[i].Name)
 		if err != nil {
-			log.Fatal(err)
+			logger.MyLog.Fatal(err)
 		}
 	}
 
@@ -56,7 +56,7 @@ func worker(job util.Job) {
 	// archive images
 	err := util.Archive(getImageNames(), job.Uid, job.TTl.String())
 	if err != nil {
-		log.Fatal(err)
+		logger.MyLog.Fatal(err)
 	}
 
 	fmt.Println("worker finished processing")

@@ -1,9 +1,9 @@
 package data
 
 import (
-	"log"
 	"os"
 	"path/filepath"
+	"server/logger"
 )
 
 func RemoveFromDisk(fileName string) {
@@ -53,6 +53,6 @@ func removeMatchingFiles(files []string) error {
 
 func handleErr(err error) {
 	if err != nil {
-		log.Println(err)
+		logger.MyLog.Println(err)
 	}
 }
