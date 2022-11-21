@@ -54,7 +54,7 @@ func worker(job util.Job) {
 	}
 
 	// archive images
-	err := util.Archive(getImageNames(), job.Uid, job.TTl.String())
+	err := util.Archive(getImageNames(), job.Uid)
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}

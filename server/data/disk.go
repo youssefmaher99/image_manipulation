@@ -7,9 +7,9 @@ import (
 )
 
 func RemoveFromDisk(fileName string) {
-
+	logger.MyLog.Println(fileName)
 	// find matching files in uploded directory
-	uplodedFiles, err := findMatchingFiles("uploaded", fileName)
+	uplodedFiles, err := findMatchingFilesInDirs("uploaded", fileName)
 	handleErr(err)
 
 	// remove matching files in uploded directory
@@ -17,7 +17,7 @@ func RemoveFromDisk(fileName string) {
 	handleErr(err)
 
 	// find matching files in filtered directory
-	filteredFiles, err := findMatchingFiles("filtered", fileName)
+	filteredFiles, err := findMatchingFilesInDirs("filtered", fileName)
 	handleErr(err)
 
 	// remove matching files in filtered directory
@@ -25,7 +25,7 @@ func RemoveFromDisk(fileName string) {
 	handleErr(err)
 
 	// find matching files in archives directory
-	archivesFiles, err := findMatchingFiles("archives", fileName)
+	archivesFiles, err := findMatchingFilesInDirs("archives", fileName)
 	handleErr(err)
 
 	// remove matching files in archives directory
@@ -34,7 +34,7 @@ func RemoveFromDisk(fileName string) {
 
 }
 
-func findMatchingFiles(dir string, fileName string) ([]string, error) {
+func findMatchingFilesInDirs(dir string, fileName string) ([]string, error) {
 	files, err := filepath.Glob(dir + "/" + fileName + "*")
 	if err != nil {
 		return nil, err

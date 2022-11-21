@@ -4,6 +4,7 @@ import (
 	"context"
 	"server/logger"
 	"server/util"
+	"time"
 )
 
 func AddJob(job util.Job) {
@@ -25,7 +26,11 @@ func AddJob(job util.Job) {
 	}
 
 	// create hash and add list
-	err := rds.HSet(ctx, "job:"+job.Uid, "uuid", job.Uid, "filter", job.Filter, "ttl", job.TTl, "images", "images:"+job.Uid, "completed", "0", "started-processing", "0").Err()
+	err := rds.HSet(ctx, "job:"+job.Uid, "uuid", job.Uid, "filter", job.Filter, "images", "images:"+job.Uid, "completed", "0", "started-processing", "0").Err()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+	err = rds.Expire(ctx, "job:"+job.Uid, time.Minute*15).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}

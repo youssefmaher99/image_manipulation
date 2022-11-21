@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"server/logger"
-	"time"
 
 	"github.com/anthonynsimon/bild/effect"
 	"github.com/anthonynsimon/bild/imgio"
@@ -22,7 +21,6 @@ type Image struct {
 type Job struct {
 	Filter string
 	Images []Image
-	TTl    time.Duration
 	Uid    string
 }
 

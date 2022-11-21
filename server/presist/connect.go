@@ -19,6 +19,8 @@ func ConnectToRedis() *redis.Client {
 	if _, err := conn.Ping(context.Background()).Result(); err != nil {
 		logger.MyLog.Fatal(err)
 	}
+
 	logger.MyLog.Println("REDIS CONNECTED")
+	initiateDestroyerWorker(conn)
 	return conn
 }

@@ -141,7 +141,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		job.Images = append(job.Images, img)
 	}
 
-	data.InMemoryUUID.Add(form_uuid, "")
+	data.InMemoryUUID.Add(form_uuid, struct{}{})
 	presist.AddJob(job)
 	MyQueue.Enqueue(job)
 	w.WriteHeader(200)

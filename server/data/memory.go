@@ -1,6 +1,6 @@
 package data
 
-type InMemory map[string]string
+type InMemory map[string]struct{}
 
 var InMemoryArchives InMemory = make(InMemory)
 var InMemoryUUID InMemory = make(InMemory)
@@ -16,6 +16,6 @@ func (m InMemory) Remove(item string) {
 	delete(m, item)
 }
 
-func (m InMemory) Add(item string, expiry string) {
-	m[item] = expiry
+func (m InMemory) Add(item string, s struct{}) {
+	m[item] = s
 }
