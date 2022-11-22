@@ -50,8 +50,30 @@ func UpdateJobKey(jobId string, key string, value string) {
 
 func DeleteJob(jobId string) {
 	ctx := context.Background()
+
 	err := rds.Del(ctx, "job:"+jobId).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}
+
+	// get all items in list then remove one by one then remove list
+	images, err := rds.LRange(ctx, "images:"+jobId, 0, -1).Result()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+
+	// delete each image
+	for _, image := range images {
+		err = rds.Del(ctx, image).Err()
+		if err != nil {
+			logger.MyLog.Fatal(err)
+		}
+	}
+
+	// remove list
+	err = rds.Del(ctx, "images:"+jobId).Err()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+
 }
