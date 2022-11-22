@@ -66,7 +66,7 @@ func worker(job util.Job) {
 	presist.UpdateJobKey(job.Uid, "completed", "1")
 
 	// add expiration to job
-	presist.AddExpirationToJob(job.Uid, 30*time.Second)
+	presist.AddExpirationToJob(job.Uid, 15*time.Minute)
 
 	// notify user that work is done if user is online
 	notification.NotificationChans[job.Uid] <- struct{}{}

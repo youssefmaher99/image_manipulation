@@ -7,7 +7,11 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
-var rds *redis.Client = ConnectToRedis()
+var rds *redis.Client
+
+func init() {
+	rds = ConnectToRedis()
+}
 
 func ConnectToRedis() *redis.Client {
 	conn := redis.NewClient(&redis.Options{
@@ -21,6 +25,6 @@ func ConnectToRedis() *redis.Client {
 	}
 
 	logger.MyLog.Println("REDIS CONNECTED")
-	initiateDestroyerWorker(conn)
+	initiateDestroyerWorker()
 	return conn
 }
