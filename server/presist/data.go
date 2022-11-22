@@ -30,7 +30,11 @@ func AddJob(job util.Job) {
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}
-	err = rds.Expire(ctx, "job:"+job.Uid, time.Minute*15).Err()
+}
+
+func AddExpirationToJob(jobId string, timeToExpire time.Duration) {
+	ctx := context.Background()
+	err := rds.Expire(ctx, "job:"+jobId, timeToExpire).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}

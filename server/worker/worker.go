@@ -8,6 +8,7 @@ import (
 	"server/presist"
 	"server/queue"
 	"server/util"
+	"time"
 )
 
 var workersPool = make(chan struct{}, 8)
@@ -63,6 +64,9 @@ func worker(job util.Job) {
 
 	// mark job as completed in redis
 	presist.UpdateJobKey(job.Uid, "completed", "1")
+
+	// add expiration to job
+	presist.AddExpirationToJob(job.Uid, 30*time.Second)
 
 	// notify user that work is done if user is online
 	notification.NotificationChans[job.Uid] <- struct{}{}
