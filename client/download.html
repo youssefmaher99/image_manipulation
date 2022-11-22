@@ -24,14 +24,16 @@
 
 
         // window.addEventListener("unload", async () => {
-            //     await fetch(`http://localhost:5000/clear/${uid}`, { keepalive: true })
-            // })
-            
-            
+        //     await fetch(`http://localhost:5000/clear/${uid}`, { keepalive: true })
+        // })
+
+
         new_btn.addEventListener("click", async () => {
-            await fetch(`http://localhost:5000/clear/${uid}`)
-            localStorage.removeItem("uid")
-            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/index.html"
+            let res = await fetch(`http://localhost:5000/clear/${uid}`)
+            if (res.status === 200) {
+                localStorage.removeItem("uid")
+                window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/index.html"
+            }
         })
 
         const eventSource = new EventSource(`http://localhost:5000/subscribe/${uid}`)
