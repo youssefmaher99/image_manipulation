@@ -6,6 +6,7 @@ import (
 	"path"
 	"server/data"
 	"server/logger"
+	"server/models"
 	"server/notification"
 	"server/presist"
 	"server/queue"
@@ -114,7 +115,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := r.MultipartForm.File["files"]
-	job := util.Job{Uid: form_uuid, Filter: r.MultipartForm.Value["filter"][0]}
+	job := models.Job{Uid: form_uuid, Filter: r.MultipartForm.Value["filter"][0]}
 	for _, file := range files {
 
 		f, err := file.Open()
@@ -137,13 +138,16 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			logger.MyLog.Fatal(err)
 		}
 
-		img := util.Image{Name: file.Filename, Path: path.Join("uploaded", form_uuid+"_"+file.Filename)}
+		img := models.Image{Name: file.Filename, Path: path.Join("uploaded", form_uuid+"_"+file.Filename)}
 		job.Images = append(job.Images, img)
 	}
 
 	data.InMemoryUUID.Add(form_uuid, struct{}{})
-	presist.AddJob(job)
+	presist.AddUUID(form_uuid)
+
 	MyQueue.Enqueue(job)
+	presist.AddJob(job)
+
 	w.WriteHeader(200)
 }
 
@@ -155,10 +159,13 @@ func SessionClosed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO : remove all refrences from redis
-	presist.DeleteJob(chi.URLParam(r, "uid"))
 	data.InMemoryArchives.Remove(fileName)
 	data.InMemoryUUID.Remove(chi.URLParam(r, "uid"))
+
+	presist.RemoveArchive(fileName)
+	presist.RemoveUUID(chi.URLParam(r, "uid"))
+	presist.DeleteJob(chi.URLParam(r, "uid"))
+
 	data.RemoveFromDisk(fileName)
 }
 

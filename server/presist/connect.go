@@ -11,6 +11,7 @@ var rds *redis.Client
 
 func init() {
 	rds = ConnectToRedis()
+	initiateDestroyerWorker()
 }
 
 func ConnectToRedis() *redis.Client {
@@ -25,6 +26,5 @@ func ConnectToRedis() *redis.Client {
 	}
 
 	logger.MyLog.Println("REDIS CONNECTED")
-	initiateDestroyerWorker()
 	return conn
 }

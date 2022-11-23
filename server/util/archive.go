@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"server/data"
+	"server/presist"
 
 	"github.com/mholt/archiver/v4"
 )
@@ -36,7 +37,9 @@ func Archive(imageNames []string, uid string) error {
 	if err != nil {
 		return err
 	}
+
 	// HACK
 	data.InMemoryArchives.Add(uid, struct{}{})
+	presist.AddArchive(uid)
 	return nil
 }

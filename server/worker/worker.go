@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"server/logger"
+	"server/models"
 	"server/notification"
 	"server/presist"
 	"server/queue"
@@ -19,7 +20,7 @@ func SpawnWorkers(queue *queue.Queue) {
 			continue
 		}
 		workersPool <- struct{}{}
-		go func(job util.Job) {
+		go func(job models.Job) {
 			fmt.Println("new worker started processing")
 			worker(job)
 			<-workersPool
@@ -28,7 +29,7 @@ func SpawnWorkers(queue *queue.Queue) {
 	}
 }
 
-func worker(job util.Job) {
+func worker(job models.Job) {
 
 	// mark job as started to process in redis
 	presist.UpdateJobKey(job.Uid, "started-processing", "1")

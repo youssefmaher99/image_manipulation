@@ -3,11 +3,11 @@ package presist
 import (
 	"context"
 	"server/logger"
-	"server/util"
+	"server/models"
 	"time"
 )
 
-func AddJob(job util.Job) {
+func AddJob(job models.Job) {
 	ctx := context.Background()
 	for _, image := range job.Images {
 
@@ -43,6 +43,38 @@ func AddExpirationToJob(jobId string, timeToExpire time.Duration) {
 func UpdateJobKey(jobId string, key string, value string) {
 	ctx := context.Background()
 	err := rds.HSet(ctx, "job:"+jobId, key, value).Err()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+}
+
+func AddArchive(archiveId string) {
+	ctx := context.Background()
+	err := rds.SAdd(ctx, "archives-list", archiveId).Err()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+}
+
+func RemoveArchive(archiveId string) {
+	ctx := context.Background()
+	err := rds.SRem(ctx, "archives-list", archiveId).Err()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+}
+
+func AddUUID(uuid string) {
+	ctx := context.Background()
+	err := rds.SAdd(ctx, "uuid-list", uuid).Err()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+}
+
+func RemoveUUID(uuid string) {
+	ctx := context.Background()
+	err := rds.SRem(ctx, "uuid-list", uuid).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}

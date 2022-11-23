@@ -31,8 +31,12 @@ func initiateDestroyerWorker() {
 						// remove it from archives
 						data.RemoveFromDisk(k)
 
-						// remove all redis refrences (job,images,image)
+						// remove all redis refrences (job,images,image), archive, uuid
 						DeleteJob(k)
+
+						RemoveArchive(k)
+						RemoveUUID(k)
+
 						continue
 					}
 					logger.MyLog.Fatal(err)

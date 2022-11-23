@@ -2,29 +2,29 @@ package queue
 
 import (
 	"fmt"
-	"server/util"
+	"server/models"
 	"sync"
 )
 
 type Queue struct {
-	queue []util.Job
 	lock  sync.Mutex
+	queue []models.Job
 }
 
 func CreateQueue() *Queue {
 	return &Queue{}
 }
 
-func (q *Queue) Enqueue(data util.Job) {
+func (q *Queue) Enqueue(data models.Job) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.queue = append(q.queue, data)
 }
 
-func (q *Queue) Dequeue() util.Job {
+func (q *Queue) Dequeue() models.Job {
 	q.lock.Lock()
 	defer q.lock.Unlock()
-	var val util.Job = q.queue[0]
+	var val models.Job = q.queue[0]
 	q.queue = q.queue[1:]
 	return val
 }

@@ -13,17 +13,6 @@ import (
 	"github.com/anthonynsimon/bild/imgio"
 )
 
-type Image struct {
-	Name string
-	Path string
-}
-
-type Job struct {
-	Filter string
-	Images []Image
-	Uid    string
-}
-
 func ValidImageType(imgType string) bool {
 	validImgTypes := []string{"image/jpg", "image/jpeg", "image/png"}
 	for _, validType := range validImgTypes {
