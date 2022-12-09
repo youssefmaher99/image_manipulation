@@ -5,11 +5,15 @@
 const sub_btn = document.getElementById("sub_btn")
 const form = document.getElementById("form")
 const maxFileSize = 1024 * 1024
+let err_div = document.getElementById("error")
+
 let oldDownload;
 
 (async function () {
-    let uid = localStorage.getItem("uid")
 
+    await pingServer();
+
+    let uid = localStorage.getItem("uid")
     if (!uid) {
         return
     }
@@ -52,16 +56,50 @@ sub_btn.addEventListener("click", async (e) => {
 
     try {
         let res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData })
-        localStorage.setItem("uid", uid)
         if (res.status === 200) {
+            err_div.innerHTML = ""
             window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/download.html"
+            localStorage.setItem("uid", uid)
+        } else {
+            let err = await res.text()
+            matchError(res.status, err)
         }
     } catch (err) {
-        if ((err.message === "Failed to fetch" && totalSize >= maxFileSize) || (res.status === 400)) {
-            console.log("File is too large")
+        if (err.message === "Failed to fetch") {
+            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/serviceDown.html"
         }
     }
 });
+
+function matchError(statusCode, err) {
+    switch (statusCode) {
+        case 400:
+            matchClientErrors(err)
+            break;
+
+        case 500:
+            matchServerErrors(err)
+            break;
+
+        default:
+            console.log("error is not matching")
+    }
+}
+
+function matchClientErrors(err) {
+    if (err === "File is too large") {
+        let err_div = document.getElementById("error")
+        err_div.innerHTML = err
+        err_div.style.color = "red"
+    }
+}
+
+
+function matchServerErrors(err) {
+    return undefined
+}
+
+
 
 function arrayOfFiles(objectFiles) {
     let files = new Array();
@@ -72,6 +110,10 @@ function arrayOfFiles(objectFiles) {
         }
     }
     return files
+}
+
+async function pingServer() {
+    await fetch("http://localhost:5000/test").catch(() => window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/serviceDown.html")
 }
 
 

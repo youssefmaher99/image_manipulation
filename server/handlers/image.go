@@ -78,12 +78,12 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 
 	// less than 50 MB max
-	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*50)
+	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*1)
 
 	err := r.ParseMultipartForm(5000)
 	if err != nil {
 		w.WriteHeader(400)
-		fmt.Println(err)
+		w.Write([]byte("File is too large"))
 		return
 	}
 
