@@ -50,7 +50,7 @@ func UpdateJobKey(jobId string, key string, value string) {
 
 func AddArchive(archiveId string) {
 	ctx := context.Background()
-	err := rds.SAdd(ctx, "archives-list", archiveId).Err()
+	err := rds.SAdd(ctx, "archives-set", archiveId).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func AddArchive(archiveId string) {
 
 func RemoveArchive(archiveId string) {
 	ctx := context.Background()
-	err := rds.SRem(ctx, "archives-list", archiveId).Err()
+	err := rds.SRem(ctx, "archives-set", archiveId).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}
@@ -66,15 +66,83 @@ func RemoveArchive(archiveId string) {
 
 func AddUUID(uuid string) {
 	ctx := context.Background()
-	err := rds.SAdd(ctx, "uuid-list", uuid).Err()
+	err := rds.SAdd(ctx, "uuid-set", uuid).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}
 }
 
+func GetAllJobs() []models.Job {
+	ctx := context.Background()
+	jobsResult, err := rds.Keys(ctx, "job:*").Result()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+
+	if len(jobsResult) == 0 {
+		return []models.Job{}
+	}
+
+	jobs := []models.Job{}
+	for _, job := range jobsResult {
+		completed, err := rds.HGet(ctx, job, "completed").Result()
+		if err != nil {
+			logger.MyLog.Fatal(err)
+		}
+
+		if completed == "0" {
+			// generate job struct
+			jobs = append(jobs, reconstructJob(job))
+		}
+	}
+
+	return jobs
+}
+
+func reconstructJob(jobId string) models.Job {
+	ctx := context.Background()
+	result, err := rds.HGetAll(ctx, jobId).Result()
+
+	if err != nil {
+		panic(err)
+	}
+
+	job := models.Job{Filter: result["filter"], Uid: result["uuid"]}
+
+	images, err := rds.LRange(ctx, result["images"], 0, -1).Result()
+	if err != nil {
+		panic(err)
+	}
+	for i := 0; i < len(images); i++ {
+		imageName, _ := rds.HGet(ctx, images[i], "name").Result()
+		imagePath, _ := rds.HGet(ctx, images[i], "path").Result()
+		job.Images = append(job.Images, models.Image{Name: imageName, Path: imagePath})
+	}
+
+	return job
+}
+
+func GetAllUUID() map[string]struct{} {
+	ctx := context.Background()
+	members, err := rds.SMembersMap(ctx, "uuid-set").Result()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+	return members
+}
+
+func GetAllArchives() map[string]struct{} {
+	ctx := context.Background()
+	members, err := rds.SMembersMap(ctx, "archives-set").Result()
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+	return members
+}
+
 func RemoveUUID(uuid string) {
 	ctx := context.Background()
-	err := rds.SRem(ctx, "uuid-list", uuid).Err()
+	err := rds.SRem(ctx, "uuid-set", uuid).Err()
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}

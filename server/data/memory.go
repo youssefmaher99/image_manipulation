@@ -2,8 +2,8 @@ package data
 
 type InMemory map[string]struct{}
 
-var InMemoryArchives InMemory = make(InMemory)
-var InMemoryUUID InMemory = make(InMemory)
+var InMemoryArchives InMemory
+var InMemoryUUID InMemory
 
 func (m InMemory) ItemExist(item string) bool {
 	if _, ok := m[item]; ok {

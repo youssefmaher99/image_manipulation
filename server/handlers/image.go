@@ -78,7 +78,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)
 
 	// less than 50 MB max
-	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*1)
+	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*500)
 
 	err := r.ParseMultipartForm(5000)
 	if err != nil {
@@ -160,11 +160,11 @@ func SessionClosed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.InMemoryArchives.Remove(fileName)
-	data.InMemoryUUID.Remove(chi.URLParam(r, "uid"))
+	data.InMemoryUUID.Remove(fileName)
 
 	presist.RemoveArchive(fileName)
-	presist.RemoveUUID(chi.URLParam(r, "uid"))
-	presist.DeleteJob(chi.URLParam(r, "uid"))
+	presist.RemoveUUID(fileName)
+	presist.DeleteJob(fileName)
 
 	data.RemoveFromDisk(fileName)
 }

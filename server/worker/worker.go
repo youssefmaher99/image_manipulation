@@ -30,7 +30,6 @@ func SpawnWorkers(queue *queue.Queue) {
 }
 
 func worker(job models.Job) {
-
 	// mark job as started to process in redis
 	presist.UpdateJobKey(job.Uid, "started-processing", "1")
 

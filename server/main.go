@@ -5,8 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"server/data"
 	"server/handlers"
 	"server/logger"
+	"server/presist"
 	"server/queue"
 	"server/router"
 	"server/worker"
@@ -17,9 +19,12 @@ import (
 )
 
 var MyQueue *queue.Queue
+var InMemoryArchives data.InMemory = make(data.InMemory)
+var InMemoryUUID data.InMemory = make(data.InMemory)
 
 func main() {
 	MyQueue = queue.CreateQueue()
+	presist.Builder(MyQueue)
 
 	go func(MyQueue *queue.Queue) {
 		worker.SpawnWorkers(MyQueue)
@@ -27,6 +32,10 @@ func main() {
 
 	// Inject global queue in package
 	handlers.MyQueue = MyQueue
+
+	// Inject UUID and archives in their package
+	data.InMemoryArchives = InMemoryArchives
+	data.InMemoryUUID = InMemoryUUID
 
 	//Graceful shutdown cleaning dirs
 	sigChan := make(chan os.Signal)
@@ -37,6 +46,7 @@ func main() {
 
 		// clean up
 		cleanDirs(map[string]string{"uploaded": "jpg", "filtered": "jpg", "archives": "gz"})
+		// os.Exit(0)
 	}()
 
 	r := router.CreateChiRouter(middleware.Logger)
