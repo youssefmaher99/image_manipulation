@@ -1,9 +1,14 @@
 .vscode
 TODO.md
+.gitignore
+
 /server/archives/*
-/server/!archives/README
+!/server/archives/README
+
 /server/uploaded/*
-/server/!uploaded/README
+!/server/uploaded/README
+
 /server/filtered/*
-/server/!filtered/README
+!/server/filtered/README
+
 redis.drawio
