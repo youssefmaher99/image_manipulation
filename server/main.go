@@ -25,6 +25,7 @@ var InMemoryUUID data.InMemory = make(data.InMemory)
 func main() {
 	MyQueue = queue.CreateQueue()
 	presist.Builder(MyQueue)
+	data.DeleteDeadRefs()
 
 	go func(MyQueue *queue.Queue) {
 		worker.SpawnWorkers(MyQueue)
@@ -45,8 +46,8 @@ func main() {
 		<-sigChan
 
 		// clean up
-		cleanDirs(map[string]string{"uploaded": "jpg", "filtered": "jpg", "archives": "gz"})
-		// os.Exit(0)
+		// cleanDirs(map[string]string{"uploaded": "jpg", "filtered": "jpg", "archives": "gz"})
+		os.Exit(0)
 	}()
 
 	r := router.CreateChiRouter(middleware.Logger)

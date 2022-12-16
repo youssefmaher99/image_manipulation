@@ -12,5 +12,4 @@ func Builder(queue *queue.Queue) {
 	for _, job := range jobs {
 		queue.Enqueue(job)
 	}
-	// push each of these jobs to queue and worker will begin working
 }

@@ -42,7 +42,8 @@ func initiateDestroyerWorker() {
 					logger.MyLog.Fatal(err)
 				}
 			}
-			time.Sleep(time.Second * 5)
+			// ls | grep -E '([A-Za-z0-9]+(-[A-Za-z0-9]+)+)' -o | uniq
+			time.Sleep(time.Second * 30)
 		}
 	}()
 }

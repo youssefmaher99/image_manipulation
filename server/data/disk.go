@@ -1,13 +1,17 @@
 package data
 
 import (
+	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"server/logger"
+	"strings"
 )
 
 func RemoveFromDisk(fileName string) {
-	logger.MyLog.Println(fileName)
+	// logger.MyLog.Println(fileName)
 	// find matching files in uploded directory
 	uplodedFiles, err := findMatchingFilesInDirs("uploaded", fileName)
 	handleErr(err)
@@ -54,5 +58,29 @@ func removeMatchingFiles(files []string) error {
 func handleErr(err error) {
 	if err != nil {
 		logger.MyLog.Println(err)
+	}
+}
+
+// in case Go app goes down and redis service is still running and some data expired
+func DeleteDeadRefs() {
+	command := "ls | grep -E '([A-Za-z0-9]+(-[A-Za-z0-9]+)+)' -o | uniq"
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Dir = "uploaded/"
+	out, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(out) != 0 {
+		fmt.Println(out)
+		filesAfterTrimLastNewline := string(out)[:len(string(out))-1]
+		files := strings.Split(filesAfterTrimLastNewline, "\n")
+		fmt.Println(files)
+		for _, file := range files {
+			if !InMemoryUUID.ItemExist(file) && file != "" {
+				fmt.Println("dead refrences Found ", file)
+				RemoveFromDisk(file)
+			}
+		}
 	}
 }
