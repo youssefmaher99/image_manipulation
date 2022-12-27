@@ -2,7 +2,6 @@ package data
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,20 +61,20 @@ func handleErr(err error) {
 }
 
 // in case Go app goes down and redis service is still running and some data expired
-func DeleteDeadRefs() {
+func RemoveDeadRefs() {
 	command := "ls | grep -E '([A-Za-z0-9]+(-[A-Za-z0-9]+)+)' -o | uniq"
 	cmd := exec.Command("bash", "-c", command)
 	cmd.Dir = "uploaded/"
 	out, err := cmd.Output()
 	if err != nil {
-		log.Fatal(err)
+		logger.MyLog.Println(err)
 	}
 
 	if len(out) != 0 {
-		fmt.Println(out)
+		// fmt.Println(out)
 		filesAfterTrimLastNewline := string(out)[:len(string(out))-1]
 		files := strings.Split(filesAfterTrimLastNewline, "\n")
-		fmt.Println(files)
+		// fmt.Println(files)
 		for _, file := range files {
 			if !InMemoryUUID.ItemExist(file) && file != "" {
 				fmt.Println("dead refrences Found ", file)

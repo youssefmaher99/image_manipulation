@@ -25,7 +25,7 @@ var InMemoryUUID data.InMemory = make(data.InMemory)
 func main() {
 	MyQueue = queue.CreateQueue()
 	presist.Builder(MyQueue)
-	data.DeleteDeadRefs()
+	data.RemoveDeadRefs()
 
 	go func(MyQueue *queue.Queue) {
 		worker.SpawnWorkers(MyQueue)

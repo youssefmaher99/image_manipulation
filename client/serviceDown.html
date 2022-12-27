@@ -16,7 +16,7 @@
             await pingServer();
         })()
         async function pingServer() {
-            await fetch("http://localhost:5000/test").then(() => window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/index.html").catch(() => window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/serviceDown.html")
+            await fetch("http://localhost:5000/test").then(() => window.location = "index.html").catch(() => null)
         }
 
 

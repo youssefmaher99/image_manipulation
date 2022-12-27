@@ -58,7 +58,7 @@ sub_btn.addEventListener("click", async (e) => {
         let res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData })
         if (res.status === 200) {
             err_div.innerHTML = ""
-            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/download.html"
+            window.location = "download.html"
             localStorage.setItem("uid", uid)
         } else {
             let err = await res.text()
@@ -66,7 +66,7 @@ sub_btn.addEventListener("click", async (e) => {
         }
     } catch (err) {
         if (err.message === "Failed to fetch") {
-            window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/serviceDown.html"
+            window.location = "serviceDown.html"
         }
     }
 });
@@ -113,7 +113,7 @@ function arrayOfFiles(objectFiles) {
 }
 
 async function pingServer() {
-    await fetch("http://localhost:5000/test").catch(() => window.location = "file:///home/youssef/Desktop/sandbox/image_manipulation/client/serviceDown.html")
+    await fetch("http://localhost:5000/test").catch(() => window.location = "serviceDown.html")
 }
 
 
