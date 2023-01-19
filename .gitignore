@@ -12,3 +12,6 @@ TODO.md
 !/server/filtered/README
 
 redis.drawio
+
+server/steps.txt
+server/Dockerfile

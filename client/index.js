@@ -5,6 +5,9 @@
 const sub_btn = document.getElementById("sub_btn")
 const form = document.getElementById("form")
 const maxFileSize = 1024 * 1024
+const uploadFiles = document.getElementById("myFile")
+const filters = document.getElementById("filters")
+let filter_values = document.getElementsByName("filter");
 let err_div = document.getElementById("error")
 
 let oldDownload;
@@ -36,11 +39,19 @@ let oldDownload;
 
 
 
-
+uploadFiles.addEventListener("change", async (e) => {
+    let filesCount = uploadFiles.files.length
+    if (filesCount > 0) {
+        filters.style.display = "block";
+    } else {
+        filters.style.display = "none";
+    }
+})
 
 sub_btn.addEventListener("click", async (e) => {
-    let uid = crypto.randomUUID();
     e.preventDefault()
+
+    let uid = crypto.randomUUID();
     const formData = new FormData()
     const file = document.getElementById("myFile")
 
@@ -50,7 +61,14 @@ sub_btn.addEventListener("click", async (e) => {
     for (let i = 0; i < files.length; i++) {
         formData.append('files', files[i])
     }
-    formData.append('filter', "gray")
+
+    let filterValue = getFilterValue()
+    if (filterValue === "") {
+        return
+    }
+
+
+    formData.append('filter', filterValue)
     formData.append('uid', uid)
 
 
@@ -133,7 +151,7 @@ async function dowloadFiles() {
 
     const bloby = await res.blob()
     const href = URL.createObjectURL(bloby)
-    const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "GrayImages" })
+    const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "Images" })
 
     document.body.append(a)
     a.click()
@@ -141,4 +159,13 @@ async function dowloadFiles() {
     URL.revokeObjectURL(href)
     a.remove()
 
+}
+
+function getFilterValue() {
+    for (let i = 0; i < filter_values.length; i++) {
+        if (filter_values[i].checked) {
+            return filter_values[i].value;
+        }
+    }
+    return ""
 }

@@ -63,7 +63,7 @@
 
             const bloby = await res.blob()
             const href = URL.createObjectURL(bloby)
-            const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "GrayImages" })
+            const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "Images" })
 
             document.body.append(a)
             a.click()
