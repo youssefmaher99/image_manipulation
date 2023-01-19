@@ -133,7 +133,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = util.SaveFile(&f, file.Filename, form_uuid)
+		_, err = util.SaveFile(f, file.Filename, form_uuid)
 		if err != nil {
 			logger.MyLog.Fatal(err)
 		}

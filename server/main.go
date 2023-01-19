@@ -46,11 +46,14 @@ func main() {
 		<-sigChan
 
 		// clean up
-		// cleanDirs(map[string]string{"uploaded": "jpg", "filtered": "jpg", "archives": "gz"})
-		os.Exit(0)
+		cleanDirs(map[string]string{"uploaded": "jpg", "filtered": "jpg", "archives": "gz"})
+		// os.Exit(0)
 	}()
 
-	r := router.CreateChiRouter(middleware.Logger)
+	r := router.CreateChiRouter(
+		middleware.Logger,
+		middleware.Heartbeat("/health"),
+	)
 	router.LoadRoutes(r)
 
 	logger.MyLog.Println("SERVER CONNECTED")

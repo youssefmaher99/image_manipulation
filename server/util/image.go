@@ -32,6 +32,9 @@ func ApplyFilter(img *os.File, filterType, uid, filename string) error {
 	case "gray":
 		grayFilter(image, filename, uid)
 		return nil
+	case "sharp":
+		sharpFilter(image, filename, uid)
+		return nil
 	default:
 		return errors.New("invalid filter")
 	}
@@ -40,7 +43,7 @@ func ApplyFilter(img *os.File, filterType, uid, filename string) error {
 func grayFilter(myimage image.Image, imageName string, uid string) {
 	grayImage := effect.Grayscale(myimage)
 	filename, ext := ExtractFileMeta(imageName)
-	image := fmt.Sprintf("%s_Gray_%s.%s", uid, filename, ext)
+	image := fmt.Sprintf("%s_gray_%s.%s", uid, filename, ext)
 
 	file, err := os.Create(path.Join("filtered", image))
 	if err != nil {
@@ -50,6 +53,24 @@ func grayFilter(myimage image.Image, imageName string, uid string) {
 	defer file.Close()
 
 	err = jpeg.Encode(file, grayImage, nil)
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+}
+
+func sharpFilter(myimage image.Image, imageName string, uid string) {
+	sharpImage := effect.Sharpen(myimage)
+	filename, ext := ExtractFileMeta(imageName)
+	image := fmt.Sprintf("%s_sharp_%s.%s", uid, filename, ext)
+
+	file, err := os.Create(path.Join("filtered", image))
+	if err != nil {
+		logger.MyLog.Fatal(err)
+	}
+
+	defer file.Close()
+
+	err = jpeg.Encode(file, sharpImage, nil)
 	if err != nil {
 		logger.MyLog.Fatal(err)
 	}
