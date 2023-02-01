@@ -12,6 +12,7 @@ import (
 	"server/queue"
 	"server/router"
 	"server/worker"
+	"strconv"
 
 	"net/http"
 
@@ -21,6 +22,7 @@ import (
 var MyQueue *queue.Queue
 var InMemoryArchives data.InMemory = make(data.InMemory)
 var InMemoryUUID data.InMemory = make(data.InMemory)
+var PORT = 5000
 
 func main() {
 	MyQueue = queue.CreateQueue()
@@ -47,7 +49,8 @@ func main() {
 
 		// clean up
 		cleanDirs(map[string]string{"uploaded": "jpg", "filtered": "jpg", "archives": "gz"})
-		// os.Exit(0)
+		defer close(sigChan)
+		os.Exit(0)
 	}()
 
 	r := router.CreateChiRouter(
@@ -56,8 +59,8 @@ func main() {
 	)
 	router.LoadRoutes(r)
 
-	logger.MyLog.Println("SERVER CONNECTED")
-	logger.MyLog.Fatal(http.ListenAndServe(":5000", r))
+	logger.MyLog.Println("SERVER CONNECTED ON PORT", PORT)
+	logger.MyLog.Fatal(http.ListenAndServe(":"+strconv.Itoa(PORT), r))
 }
 
 func cleanDirs(dirs map[string]string) {
@@ -69,5 +72,5 @@ func cleanDirs(dirs map[string]string) {
 			continue
 		}
 	}
-	os.Exit(0)
+	// os.Exit(0)
 }

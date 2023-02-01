@@ -1,7 +1,6 @@
 // if (localStorage.getItem("uid") !== null) {
 //     localStorage.removeItem("uid")
 // }
-
 const sub_btn = document.getElementById("sub_btn")
 const form = document.getElementById("form")
 const maxFileSize = 1024 * 1024
@@ -11,6 +10,8 @@ let filter_values = document.getElementsByName("filter");
 let err_div = document.getElementById("error")
 
 let oldDownload;
+
+form.addEventListener("submit", (e) => e.preventDefault());
 
 (async function () {
 
@@ -76,8 +77,8 @@ sub_btn.addEventListener("click", async (e) => {
         let res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData })
         if (res.status === 200) {
             err_div.innerHTML = ""
-            window.location = "download.html"
             localStorage.setItem("uid", uid)
+            window.location = "download.html"
         } else {
             let err = await res.text()
             matchError(res.status, err)
