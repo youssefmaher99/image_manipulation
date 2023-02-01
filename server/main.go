@@ -23,6 +23,7 @@ var InMemoryArchives data.InMemory = make(data.InMemory)
 var InMemoryUUID data.InMemory = make(data.InMemory)
 
 func main() {
+	fmt.Println("???????")
 	MyQueue = queue.CreateQueue()
 	presist.Builder(MyQueue)
 	data.RemoveDeadRefs()
