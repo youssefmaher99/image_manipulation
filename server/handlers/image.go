@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var MyQueue *queue.Queue
+var MyQueue *queue.Queue[models.Job]
 
 func CheckStatus(w http.ResponseWriter, r *http.Request) {
 	util.EnableCors(&w)

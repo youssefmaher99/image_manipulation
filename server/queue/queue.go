@@ -2,45 +2,44 @@ package queue
 
 import (
 	"fmt"
-	"server/models"
 	"sync"
 )
 
-type Queue struct {
+type Queue[T any] struct {
 	lock  sync.Mutex
-	queue []models.Job
+	queue []T
 }
 
-func CreateQueue() *Queue {
-	return &Queue{}
+func CreateQueue[T any]() *Queue[T] {
+	return &Queue[T]{}
 }
 
-func (q *Queue) Enqueue(data models.Job) {
+func (q *Queue[T]) Enqueue(data T) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.queue = append(q.queue, data)
 }
 
-func (q *Queue) Dequeue() models.Job {
+func (q *Queue[T]) Dequeue() T {
 	q.lock.Lock()
 	defer q.lock.Unlock()
-	var val models.Job = q.queue[0]
+	var val T = q.queue[0]
 	q.queue = q.queue[1:]
 	return val
 }
 
-func (q *Queue) Peek() any {
+func (q *Queue[T]) Peek() any {
 	if q.IsEmpty() {
 		return ""
 	}
 	return q.queue[0]
 }
 
-func (q *Queue) IsEmpty() bool {
+func (q *Queue[T]) IsEmpty() bool {
 	return len(q.queue) <= 0
 }
 
-func (q *Queue) Display() {
+func (q *Queue[T]) Display() {
 	for i := 0; i < len(q.queue); i++ {
 		fmt.Println(q.queue[i])
 	}
