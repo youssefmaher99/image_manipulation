@@ -14,7 +14,7 @@ import (
 
 var workersPool = make(chan struct{}, 8)
 
-func SpawnWorkers(queue *queue.Queue) {
+func SpawnWorkers(queue *queue.Queue[models.Job]) {
 	for {
 		if queue.IsEmpty() {
 			continue

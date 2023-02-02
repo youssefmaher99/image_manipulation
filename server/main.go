@@ -8,6 +8,7 @@ import (
 	"server/data"
 	"server/handlers"
 	"server/logger"
+	"server/models"
 	"server/presist"
 	"server/queue"
 	"server/router"
@@ -18,17 +19,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-var MyQueue *queue.Queue
+var MyQueue *queue.Queue[models.Job]
 var InMemoryArchives data.InMemory = make(data.InMemory)
 var InMemoryUUID data.InMemory = make(data.InMemory)
 
 func main() {
-	fmt.Println("???????")
-	MyQueue = queue.CreateQueue()
+	MyQueue = queue.CreateQueue[models.Job]()
 	presist.Builder(MyQueue)
 	data.RemoveDeadRefs()
 
-	go func(MyQueue *queue.Queue) {
+	go func(MyQueue *queue.Queue[models.Job]) {
 		worker.SpawnWorkers(MyQueue)
 	}(MyQueue)
 
