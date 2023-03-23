@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -15,8 +16,6 @@ import (
 	"server/worker"
 	"strconv"
 
-	"net/http"
-
 	"github.com/go-chi/chi/v5/middleware"
 )
 
@@ -27,12 +26,6 @@ var PORT = 5000
 
 func main() {
 	MyQueue = queue.CreateQueue[models.Job]()
-	presist.Builder(MyQueue)
-	data.RemoveDeadRefs()
-
-	go func(MyQueue *queue.Queue[models.Job]) {
-		worker.SpawnWorkers(MyQueue)
-	}(MyQueue)
 
 	// Inject global queue in package
 	handlers.MyQueue = MyQueue
@@ -40,6 +33,14 @@ func main() {
 	// Inject UUID and archives in their package
 	data.InMemoryArchives = InMemoryArchives
 	data.InMemoryUUID = InMemoryUUID
+
+	presist.Builder(MyQueue)
+	presist.InitiateDestroyerWorker()
+	data.RemoveDeadRefs()
+
+	go func(MyQueue *queue.Queue[models.Job]) {
+		worker.SpawnWorkers(MyQueue)
+	}(MyQueue)
 
 	//Graceful shutdown cleaning dirs
 	sigChan := make(chan os.Signal)
