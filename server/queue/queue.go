@@ -6,7 +6,7 @@ import (
 )
 
 type Queue[T any] struct {
-	lock  sync.Mutex
+	lock  sync.RWMutex
 	queue []T
 }
 
@@ -36,6 +36,8 @@ func (q *Queue[T]) Peek() any {
 }
 
 func (q *Queue[T]) IsEmpty() bool {
+	q.lock.RLock()
+	defer q.lock.RUnlock()
 	return len(q.queue) <= 0
 }
 

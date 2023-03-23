@@ -10,7 +10,7 @@ import (
 
 // a destroyer worker is a worker responsible for checking keys expiration in redis and the destruction of any refrences for keys on server such as archives or images
 
-func initiateDestroyerWorker() {
+func InitiateDestroyerWorker() {
 	go func() {
 		for {
 			// check all job keys in redis against archives

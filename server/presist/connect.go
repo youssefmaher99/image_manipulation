@@ -11,7 +11,7 @@ var rds *redis.Client
 
 func init() {
 	rds = ConnectToRedis()
-	initiateDestroyerWorker()
+	// initiateDestroyerWorker()
 	// initiateDeadRefsWorker()
 }
 
