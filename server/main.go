@@ -9,6 +9,7 @@ import (
 	"server/data"
 	"server/handlers"
 	"server/logger"
+	customMiddleware "server/middleware"
 	"server/models"
 	"server/presist"
 	"server/queue"
@@ -58,6 +59,7 @@ func main() {
 	r := router.CreateChiRouter(
 		middleware.Logger,
 		middleware.Heartbeat("/health"),
+		customMiddleware.EnableCors,
 	)
 	router.LoadRoutes(r)
 

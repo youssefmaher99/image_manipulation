@@ -19,12 +19,10 @@ import (
 var MyQueue *queue.Queue[models.Job]
 
 func CheckStatus(w http.ResponseWriter, r *http.Request) {
-	util.EnableCors(&w)
 	w.WriteHeader(http.StatusOK)
 }
 
 func Subscribe(w http.ResponseWriter, r *http.Request) {
-	util.EnableCors(&w)
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -75,7 +73,6 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 }
 
 func Upload(w http.ResponseWriter, r *http.Request) {
-	util.EnableCors(&w)
 
 	// less than 50 MB max
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*500)
@@ -152,7 +149,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func SessionClosed(w http.ResponseWriter, r *http.Request) {
-	util.EnableCors(&w)
 	fileName := chi.URLParam(r, "uid")
 	if !data.InMemoryArchives.ItemExist(fileName) {
 		w.WriteHeader(http.StatusNotFound)
@@ -170,7 +166,6 @@ func SessionClosed(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckFileStatus(w http.ResponseWriter, r *http.Request) {
-	util.EnableCors(&w)
 	uid := chi.URLParam(r, "uid")
 
 	_, err := uuid.Parse(uid)
@@ -188,7 +183,6 @@ func CheckFileStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
-	util.EnableCors(&w)
 	fileName := chi.URLParam(r, "uid")
 	if !data.InMemoryArchives.ItemExist(fileName) {
 		w.WriteHeader(http.StatusNotFound)
