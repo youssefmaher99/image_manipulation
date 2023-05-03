@@ -33,7 +33,7 @@ let oldDownload;
         document.getElementById("old_files_container").style.display = "block";
         oldDownload.addEventListener("click", (e) => {
             e.preventDefault();
-            dowloadFiles();
+            await dowloadFiles();
         })
     }
 })()
@@ -137,33 +137,33 @@ async function pingServer() {
 
 
 async function dowloadFiles() {
-    // send request to check if file is created with the uid
-    // let res = await fetch(`http://localhost:5000/check/${uid}`)
-
-    // if (res.status !== 200) {
-    //     return
-    // }
-    let uid = localStorage.getItem("uid");
     try {
-        let res = await fetch(`http://localhost:5000/download/${uid}`)
-    
-        if (res.status !== 200) {
-            return
+        let response = await fetch(`http://localhost:5000/download/${uid}`)
+        const reader = response.body.getReader();
+        let chunks = [];
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            chunks.push(value)
+            console.log(value)
+            // Do something with the chunk of data
         }
-    
-        const bloby = await res.blob()
+
+
+        const bloby = new Blob(chunks, { type: "application/octet-stream" })
         const href = URL.createObjectURL(bloby)
         const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "Images" })
-    
+
         document.body.append(a)
         a.click()
-    
+
         URL.revokeObjectURL(href)
         a.remove()
     } catch (error) {
-        console.log(error)        
+        console.log(error)
     }
-
 }
 
 function getFilterValue() {
