@@ -69,6 +69,13 @@ func worker(job models.Job) {
 	presist.AddExpirationToJob(job.Uid, 15*time.Minute)
 
 	// notify user that work is done if user is online
+
+	// HACK: if server finished processing before client open SSE connection client won't be notified
+	// sleep 1 second
+	// BUG: can cause problem in the future (exploitation - slow internet connection)
+	if len(job.Images) < 10 {
+		time.Sleep(time.Second)
+	}
 	notification.NotificationChans[job.Uid] <- struct{}{}
 
 }

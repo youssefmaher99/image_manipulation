@@ -11,7 +11,7 @@ let err_div = document.getElementById("error")
 
 let oldDownload;
 
-form.addEventListener("submit", (e) => e.preventDefault());
+// form.addEventListener("submit", (e) => e.preventDefault());
 
 (async function () {
 
@@ -144,21 +144,25 @@ async function dowloadFiles() {
     //     return
     // }
     let uid = localStorage.getItem("uid");
-    res = await fetch(`http://localhost:5000/download/${uid}`)
-
-    if (res.status !== 200) {
-        return
+    try {
+        let res = await fetch(`http://localhost:5000/download/${uid}`)
+    
+        if (res.status !== 200) {
+            return
+        }
+    
+        const bloby = await res.blob()
+        const href = URL.createObjectURL(bloby)
+        const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "Images" })
+    
+        document.body.append(a)
+        a.click()
+    
+        URL.revokeObjectURL(href)
+        a.remove()
+    } catch (error) {
+        console.log(error)        
     }
-
-    const bloby = await res.blob()
-    const href = URL.createObjectURL(bloby)
-    const a = Object.assign(document.createElement('a'), { href, style: "display:none", download: "Images" })
-
-    document.body.append(a)
-    a.click()
-
-    URL.revokeObjectURL(href)
-    a.remove()
 
 }
 
